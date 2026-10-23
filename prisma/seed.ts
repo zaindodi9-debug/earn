@@ -29,11 +29,7 @@ async function main() {
         },
       })
       console.log(`Akun administrator awal dibuat: ${initialAdminEmail}`)
-    } else if (
-      existingAdmin.role !== 'ADMIN' ||
-      existingAdmin.status !== 'ACTIVE' ||
-      !verifyPassword(initialAdminPassword, existingAdmin.passwordHash)
-    ) {
+    } else if (!verifyPassword(initialAdminPassword, existingAdmin.passwordHash)) {
       await db.$transaction(async (tx) => {
         await tx.user.update({
           where: { id: existingAdmin.id },
@@ -47,7 +43,7 @@ async function main() {
       })
       console.log(`Kredensial administrator dirotasi dan sesi lama dicabut: ${initialAdminEmail}`)
     } else {
-      console.log(`Akun administrator awal sudah sesuai: ${initialAdminEmail}`)
+      console.log(`Kredensial bootstrap administrator sudah diterapkan: ${initialAdminEmail}`)
     }
   } else {
     console.log('Bootstrap administrator dilewati. Set INITIAL_ADMIN_EMAIL dan INITIAL_ADMIN_PASSWORD jika diperlukan.')
