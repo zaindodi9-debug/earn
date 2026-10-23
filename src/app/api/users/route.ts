@@ -36,6 +36,10 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: 'Body tidak valid' }, { status: 400 })
   }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Body harus berupa objek JSON' }, { status: 400 })
+  }
+
   const email = String(body.email || '').trim().toLowerCase()
   const name = String(body.name || '').trim()
   const password = String(body.password || '')
