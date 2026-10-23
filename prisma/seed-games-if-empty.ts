@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { hashPassword } from '@/lib/auth'
 import { resolveGameEmbedUrl } from '@/lib/game-embeds'
 
 const catalog = [
@@ -110,6 +111,41 @@ const levels = [
 ] as const
 
 async function main() {
+  // Optional production admin bootstrap. Secrets are supplied through Vercel env vars,
+  // never committed to the repository. This account is reconciled on each production build.
+  const initialAdminEmail = (process.env.INITIAL_ADMIN_EMAIL || '').trim().toLowerCase()
+  const initialAdminPassword = process.env.INITIAL_ADMIN_PASSWORD || ''
+  if (initialAdminEmail || initialAdminPassword) {
+    if (!initialAdminEmail || !initialAdminPassword) {
+      throw new Error('INITIAL_ADMIN_EMAIL dan INITIAL_ADMIN_PASSWORD harus diisi bersama.')
+    }
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(initialAdminEmail)) {
+      throw new Error('INITIAL_ADMIN_EMAIL tidak memiliki format email yang valid.')
+    }
+    if (initialAdminPassword.length < 16) {
+      throw new Error('INITIAL_ADMIN_PASSWORD harus minimal 16 karakter.')
+    }
+    await db.user.upsert({
+      where: { email: initialAdminEmail },
+      update: {
+        passwordHash: hashPassword(initialAdminPassword),
+        role: 'ADMIN',
+        status: 'ACTIVE',
+      },
+      create: {
+        email: initialAdminEmail,
+        name: 'Administrator',
+        passwordHash: hashPassword(initialAdminPassword),
+        role: 'ADMIN',
+        status: 'ACTIVE',
+        points: 0,
+      },
+    })
+    console.log(`Akun administrator awal telah dipastikan tersedia: ${initialAdminEmail}`)
+  } else {
+    console.log('Bootstrap admin dilewati: INITIAL_ADMIN_EMAIL/PASSWORD belum disetel.')
+  }
+
   const seeded = await db.$transaction(async (tx) => {
     const existingCount = await tx.game.count()
     if (existingCount > 0) {
