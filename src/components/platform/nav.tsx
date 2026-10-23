@@ -54,6 +54,7 @@ export function Nav({ user, view, onOpenAuth, onLogout, onSwitchView }: Props) {
       faq: 'leaderboard',
       wallet: 'wallet',
       profile: 'profile',
+      progress: 'leaderboard',
     }
 
     function onScroll() {
@@ -61,11 +62,11 @@ export function Nav({ user, view, onOpenAuth, onLogout, onSwitchView }: Props) {
 
       const sections = Array.from(
         document.querySelectorAll<HTMLElement>(
-          '#beranda, #games, #how, #tips, #faq, #profile, #wallet'
+          '#beranda, #games, #how, #tips, #faq, #profile, #wallet, #progress'
         )
       )
       const visibleSections = sections.filter(
-        (section) => section.getBoundingClientRect().top <= 150
+        (section) => section.getBoundingClientRect().top <= 80
       )
       const currentSection = visibleSections[visibleSections.length - 1]
       const nextTab = currentSection ? tabForSection[currentSection.id] : 'home'
@@ -99,10 +100,18 @@ export function Nav({ user, view, onOpenAuth, onLogout, onSwitchView }: Props) {
       return
     }
 
-    if (view === 'admin' && (tab.action === 'profile' || tab.action === 'wallet')) {
+    if (view === 'admin' && (tab.key === 'leaderboard' || tab.action === 'profile' || tab.action === 'wallet')) {
       onSwitchView('user')
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
+    }
+
+    if (tab.key === 'leaderboard' && user) {
+      const progressSection = document.getElementById('progress')
+      if (progressSection) {
+        progressSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
+      }
     }
 
     const targetId = tab.action === 'wallet' ? 'wallet' : tab.action === 'profile' ? 'profile' : ''
@@ -185,6 +194,7 @@ export function Nav({ user, view, onOpenAuth, onLogout, onSwitchView }: Props) {
           {BOTTOM_TABS.map((tab) => {
             const Icon = tab.icon
             const isActive = activeTab === tab.key
+            const label = tab.key === 'leaderboard' && user && view !== 'admin' ? 'Progres' : tab.label
             return (
               <button
                 key={tab.key}
@@ -196,7 +206,7 @@ export function Nav({ user, view, onOpenAuth, onLogout, onSwitchView }: Props) {
                 aria-current={isActive ? 'page' : undefined}
               >
                 <Icon className="eg-bottom-nav-icon" />
-                <span className="leading-tight">{tab.label}</span>
+                <span className="leading-tight">{label}</span>
               </button>
             )
           })}
