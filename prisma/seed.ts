@@ -131,6 +131,16 @@ async function main() {
       embedUrl: '/games/grand-city-auto.html',
       status: 'ACTIVE',
     },
+    {
+      title: 'Honeypaw: Petualangan Beruang',
+      slug: 'honeypaw',
+      description: 'Petualangan platformer 3D di hutan fantasi. Kumpulkan madu, hindari lebah, aktifkan checkpoint, dan capai Sarang Agung.',
+      category: 'arcade',
+      sortOrder: 12,
+      thumbnailUrl: '/images/game-honeypaw.svg',
+      embedUrl: '/games/honeypaw.html',
+      status: 'ACTIVE',
+    },
   ]
 
   for (const g of games) {

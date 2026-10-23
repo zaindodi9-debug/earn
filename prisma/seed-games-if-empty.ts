@@ -102,6 +102,15 @@ const catalog = [
     embedUrl: '/games/grand-city-auto.html',
     thumbnailUrl: null,
   },
+  {
+    title: 'Honeypaw: Petualangan Beruang',
+    slug: 'honeypaw',
+    description: 'Petualangan platformer 3D di hutan fantasi. Kumpulkan madu, hindari lebah, aktifkan checkpoint, dan capai Sarang Agung.',
+    category: 'arcade',
+    sortOrder: 12,
+    embedUrl: '/games/honeypaw.html',
+    thumbnailUrl: '/images/game-honeypaw.svg',
+  },
 ] as const
 
 const levels = [
@@ -119,7 +128,7 @@ async function main() {
     if (!initialAdminEmail || !initialAdminPassword) {
       throw new Error('INITIAL_ADMIN_EMAIL dan INITIAL_ADMIN_PASSWORD harus diisi bersama.')
     }
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(initialAdminEmail)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(initialAdminEmail)) {
       throw new Error('INITIAL_ADMIN_EMAIL tidak memiliki format email yang valid.')
     }
     if (initialAdminPassword.length < 16) {
