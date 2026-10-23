@@ -127,13 +127,16 @@ export function GamePlayer({
   // Listen for score reports from embedded games (postMessage).
   useEffect(() => {
     if (!open || !game?.embedUrl) return
-    const ALLOWED_ORIGINS = [
-      window.location.origin,
-      'https://earngames.web.id',
-      'http://localhost:3000',
-    ]
+    let expectedOrigin: string
+    try {
+      const embed = new URL(game.embedUrl, window.location.origin)
+      if (embed.protocol !== 'http:' && embed.protocol !== 'https:') return
+      expectedOrigin = embed.origin
+    } catch {
+      return
+    }
     function onMessage(e: MessageEvent) {
-      if (!ALLOWED_ORIGINS.includes(e.origin)) return
+      if (e.origin !== expectedOrigin) return
       // Only accept messages from the exact game iframe currently opened by this modal.
       if (!iframeRef.current || e.source !== iframeRef.current.contentWindow) return
       const d = e.data
