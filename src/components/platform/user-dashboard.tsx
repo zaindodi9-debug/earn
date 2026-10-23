@@ -126,7 +126,7 @@ export function UserDashboard({ user, onOpenAuth, onPointsChange }: Props) {
       </section>
 
       {/* Progress table — dark */}
-      <section className="py-8 md:py-12">
+      <section id="progress" className="py-8 md:py-12 scroll-mt-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between mb-5">
             <div>
