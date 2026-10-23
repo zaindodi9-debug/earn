@@ -149,7 +149,7 @@ export function GameLibrary({ user, onOpenAuth, onPlayed }: Props) {
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton
                 key={i}
-                className="h-36 sm:h-80 rounded-xl sm:rounded-2xl bg-[#151b28] border border-white/5"
+                className="h-44 sm:h-96 lg:h-[420px] rounded-xl sm:rounded-2xl bg-[#151b28] border border-white/5"
               />
             ))}
           </div>
@@ -268,7 +268,7 @@ function GameCard({ game, onPlay }: { game: Game; onPlay: () => void }) {
           </span>
         </div>
         {/* compact stats on mobile */}
-        <div className="sm:hidden flex items-center gap-2 text-[10px] text-gray-300">
+        <div className="sm:hidden flex items-center gap-2 text-[11px] text-gray-300">
           <span className="inline-flex items-center gap-1">
             <Layers className="size-3" />
             {activeLevels.length} Level
