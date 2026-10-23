@@ -42,7 +42,7 @@ export function Footer() {
             </div>
             <p className="text-sm text-gray-400">
               Platform game internal dengan sistem poin yang jujur dan transparan.
-              Mainkan game, selesaikan level, dan kumpulkan poin.
+              Mainkan game yang tersedia. Bonus pendaftaran 100 poin tersedia; hadiah permainan sementara nonaktif.
             </p>
           </div>
 
