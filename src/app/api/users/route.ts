@@ -50,8 +50,8 @@ export async function POST(req: Request) {
   if (!email || !password) {
     return NextResponse.json({ error: 'Email dan kata sandi wajib diisi' }, { status: 400 })
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ error: 'Format email tidak valid atau terlalu panjang' }, { status: 400 })
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: 'Format email tidak valid atau terlalu panjang atau terlalu panjang' }, { status: 400 })
   }
   if (role !== 'ADMIN' && role !== 'USER') {
     return NextResponse.json({ error: 'role tidak valid' }, { status: 400 })
