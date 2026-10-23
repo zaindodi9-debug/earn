@@ -9,7 +9,7 @@ Work Log:
 - Read existing prisma schema, db.ts, package.json
 - Defined Prisma schema: User, Game, GameLevel, UserProgress, PointsLedger, Session (SQLite)
 - Built `src/lib/auth.ts`: scrypt password hashing, HMAC-signed session tokens, cookie helpers, getUserFromRequest
-- Wrote `prisma/seed.ts`: admin (admin@nexusplay.id/admin123), demo user (pemain@nexusplay.id/demo123), 3 sample games × 3 levels each
+- Wrote `prisma/seed.ts`: admin ([legacy admin credentials removed]), demo user ([legacy demo credentials removed]), 3 sample games × 3 levels each
 - Ran `bun run db:push` + `bun run db:generate` + seed — all succeeded
 - Built API routes:
   - `/api/auth` (GET me / POST register / PUT login / DELETE logout)
@@ -53,7 +53,7 @@ Stage Summary:
 - CSS already in globals.css: `.eg-gradient-bg`, `.eg-card-hover`, `.eg-animate-float`, `.eg-pulse-glow`, `.eg-app-card`, `.eg-star-rating`, `.eg-feature-icon`, `.eg-reveal`/`.eg-reveal-visible`
 - Existing images: `/images/hero-app.png`, `/images/tips-gaming.png`
 - Dev server runs on port 3000. Only `/` route is user-visible.
-- Admin login: admin@nexusplay.id / admin123
+- Admin login: admin@nexusplay.id / [legacy admin password removed]
 
 ---
 Task ID: 2
@@ -89,8 +89,8 @@ Stage Summary:
 - 14 components + 1 lib + 1 orchestrator page, all under `src/components/platform/` and `src/lib/api-client.ts`.
 - Verified with agent-browser at http://localhost:3000:
   - Landing page renders Hero, Game Library (3 cards), How it works, Features, Tips, FAQ accordion, CTA, Footer.
-  - Admin login (admin@nexusplay.id/admin123) → "Panel Admin" toggle visible → all 4 tabs render with real DB data: Dashboard (1 Pemain, 3 Game Aktif, 9 Level, 0 Permainan, 120 Poin Dibagikan, 0 Ditangguhkan + recent users + top players), Pengguna (2 users with Detail/Edit/Tangguhkan/Hapus actions + Tambah Pengguna), Game (3 games with Edit/Hapus + Tambah Game), Level (9 levels grouped by game + filter + Edit/Hapus + Tambah Level). User Detail dialog shows progress + points ledger.
-  - Demo user login (pemain@nexusplay.id/demo123) → "Halo, Pemain Demo!" + 120 Poin + 0 Level Selesai + progress table + game library.
+  - Admin login ([legacy admin credentials removed]) → "Panel Admin" toggle visible → all 4 tabs render with real DB data: Dashboard (1 Pemain, 3 Game Aktif, 9 Level, 0 Permainan, 120 Poin Dibagikan, 0 Ditangguhkan + recent users + top players), Pengguna (2 users with Detail/Edit/Tangguhkan/Hapus actions + Tambah Pengguna), Game (3 games with Edit/Hapus + Tambah Game), Level (9 levels grouped by game + filter + Edit/Hapus + Tambah Level). User Detail dialog shows progress + points ledger.
+  - Demo user login ([legacy demo credentials removed]) → "Halo, Pemain Demo!" + 120 Poin + 0 Level Selesai + progress table + game library.
   - Played Ludo Sprint L1 demo (score 123, target 100) → +10 poin → 130 total → nav badge updated → progress table shows Selesai. Played Puzzle Mania L1 demo (score 500) → +10 poin → 140 total → second row in progress table with full game/level info (optimistic update works without refetch).
   - Mobile viewport 375×812: mobile menu toggle works, dashboard + tables render responsively.
   - `agent-browser errors` clean — no runtime errors. `bun run lint` clean — 0 errors.
@@ -141,11 +141,11 @@ Work Log:
 - Rebranded NexusPlay -> EarnGames across all 14 src files (sed replace)
 - Updated layout.tsx: metadataBase, canonical, og:url -> earngames.web.id
 - Updated footer contact: halo@earngames.web.id, domain in address
-- Updated auth-modal demo hint: pemain@earngames.web.id / demo123
+- Updated auth-modal demo hint: [legacy demo credentials removed]
 - Added postMessage listener in game-player.tsx (origin allowlist: earngames.web.id, localhost:3000, same-origin). Auto-captures EARNGAMES_GAME_RESULT, fills manualScore, calls submit().
 - Updated iframe helper text: "Game akan otomatis mengirim skor..."
 - Re-seeded: 10 games total. Balapan Senja (sunset-rush) with embedUrl=/games/sunset-rush.html (PLAYABLE). 9 gamezop-style demo games (Bubble Pop, Flip Match, Ninja Jump, Tembak Sasaran, Bola Pinball, Solitaire Cepat, Penalti Sepak Bola, Tower Stack, Catur Kilat) awaiting embedUrl.
-- Admin credentials: admin@earngames.web.id / admin123. User: pemain@earngames.web.id / demo123.
+- Admin credentials: [legacy admin credentials removed]. User: [legacy demo credentials removed].
 - Created docs/GAME-INTEGRATION.md (full developer guide in Indonesian).
 - Created admin-dev-docs.tsx: "Dokumentasi Integrasi" button in admin panel header -> Dialog with snippet (copyable), format spec, security, flow, checklist.
 - Wired AdminDevDocs into admin-panel.tsx header.
@@ -267,7 +267,7 @@ Stage Summary:
 - Bottom nav: `position: fixed; z-index: 50`, bg `rgba(15,20,25,0.92)` + blur. Mobile 375×812: full-width (left=0, right=375). Desktop 1440×900: centered max-w-md (left=480, right=960, width=480, rounded top corners). 5 tabs (Beranda/Game/Peringkat/Dompet/Profil), active tab gets gold color + drop-shadow glow.
 - Hero: dark blue gradient + 7 floating gold coin particles + radial gold glow + gold gradient text on "Poin Hadiah" + gold CTA with pulse-glow.
 - Game library: 7 category filter chips above grid (Semua active=gold/black by default), filter verified working (Arcade filter → 6 games: Ludo Sprint, Balapan Senja, Ninja Jump, Tembak Sasaran, Bola Pinball, Tower Stack). Game cards dark `#151b28`, gold chevron, gold CTA, orange/green status pills.
-- Auth modal: dark inputs with left icons, gold gradient CTA. Login flow verified end-to-end (pemain@earngames.web.id / demo123 → dashboard loads with 140 poin, progress table, gold score column).
+- Auth modal: dark inputs with left icons, gold gradient CTA. Login flow verified end-to-end ([legacy demo credentials removed] → dashboard loads with 140 poin, progress table, gold score column).
 - Game player still works: clicked "Main" on Balapan Senja → pre-game dialog → "Mainkan Sekarang" → fullscreen iframe loads `/games/sunset-rush.html` at 375×812.
 - Lint: 0 errors, 0 warnings. Dev server: running on port 3000, all 200 OK responses. Browser errors: clean. Console: only React DevTools info + HMR connected (no warnings/errors).
 - Functionality preserved: auth (cookie session), game playing (iframe fullscreen + postMessage), admin panel (4 tabs), optimistic progress updates. Only visual design + nav structure changed.
