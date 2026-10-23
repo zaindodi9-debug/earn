@@ -25,3 +25,5 @@ jobs:
         run: bunx tsc --noEmit
       - name: Build
         run: bun run build
+        env:
+          SESSION_SECRET: ci-only-secret-not-used-outside-this-build-2026
