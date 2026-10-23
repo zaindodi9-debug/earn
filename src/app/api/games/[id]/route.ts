@@ -21,6 +21,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 403 })
   }
   const { id } = await params
+  const existingGame = await db.game.findUnique({ where: { id }, select: { id: true } })
+  if (!existingGame) return NextResponse.json({ error: 'Game tidak ditemukan' }, { status: 404 })
+
   let body: any
   try {
     body = await req.json()
@@ -100,6 +103,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 403 })
   }
   const { id } = await params
+  const existingGame = await db.game.findUnique({ where: { id }, select: { id: true } })
+  if (!existingGame) return NextResponse.json({ error: 'Game tidak ditemukan' }, { status: 404 })
   await db.game.delete({ where: { id } })
   return NextResponse.json({ ok: true })
 }
