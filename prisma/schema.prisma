@@ -101,3 +101,11 @@ model Session {
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+model AuthRateLimit {
+  key             String   @id
+  attempts        Int      @default(0)
+  windowStartedAt DateTime @default(now())
+  blockedUntil    DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
