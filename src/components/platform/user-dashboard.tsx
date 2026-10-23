@@ -87,7 +87,7 @@ export function UserDashboard({ user, onOpenAuth, onPointsChange }: Props) {
   return (
     <main className="flex-1 pt-14 pb-24 sm:pb-20">
       {/* Welcome banner — dark blue gradient with gold accents */}
-      <section className="eg-hero-gradient text-white">
+      <section id="profile" className="eg-hero-gradient text-white scroll-mt-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
@@ -104,7 +104,7 @@ export function UserDashboard({ user, onOpenAuth, onPointsChange }: Props) {
             </div>
 
             <div className="flex gap-3">
-              <div className="eg-glass rounded-xl p-4 min-w-[140px]">
+              <div id="wallet" className="eg-glass rounded-xl p-4 min-w-[140px] scroll-mt-20">
                 <div className="flex items-center gap-2 text-yellow-300 text-xs mb-1">
                   <Target className="size-3" /> Total Poin
                 </div>
@@ -166,8 +166,50 @@ export function UserDashboard({ user, onOpenAuth, onPointsChange }: Props) {
                 </p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
+              <>
+                <div className="divide-y divide-white/10 md:hidden">
+                  {progress.map((p) => {
+                    const lvl = p.gameLevel
+                    return (
+                      <div key={p.id} className="space-y-3 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold text-white">
+                              {lvl?.game?.title || '—'}
+                            </p>
+                            <p className="mt-1 text-xs text-gray-400">
+                              Level {lvl?.levelNumber ?? '?'}{lvl?.name ? ' · ' + lvl.name : ''}
+                            </p>
+                          </div>
+                          {p.completed ? (
+                            <Badge className="shrink-0 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              <CheckCircle2 className="size-3" /> Selesai
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="shrink-0 text-gray-300 border-white/10 bg-white/5">
+                              Belum Tuntas
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="rounded-lg bg-white/5 p-3">
+                            <p className="text-xs text-gray-400">Skor tertinggi</p>
+                            <p className="mt-1 font-bold text-yellow-300">
+                              {p.highScore} <span className="text-gray-400 font-normal">/ {lvl?.targetScore ?? '-'}</span>
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-white/5 p-3">
+                            <p className="text-xs text-gray-400">Percobaan</p>
+                            <p className="mt-1 font-bold text-white">{p.attempts}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
                   <TableRow className="border-white/8 hover:bg-transparent">
                     <TableHead className="text-gray-400">Game</TableHead>
                     <TableHead className="text-gray-400">Level</TableHead>
@@ -230,7 +272,9 @@ export function UserDashboard({ user, onOpenAuth, onPointsChange }: Props) {
                     )
                   })}
                 </TableBody>
-              </Table>
+                  </Table>
+                </div>
+              </>
             )}
           </Card>
         </div>
