@@ -10,7 +10,7 @@ async function main() {
     if (!initialAdminEmail || !initialAdminPassword) {
       throw new Error('INITIAL_ADMIN_EMAIL dan INITIAL_ADMIN_PASSWORD harus diisi bersama.')
     }
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(initialAdminEmail)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(initialAdminEmail)) {
       throw new Error('INITIAL_ADMIN_EMAIL tidak memiliki format email yang valid.')
     }
     if (initialAdminPassword.length < 16) {
