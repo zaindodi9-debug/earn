@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "prisma generate && prisma db push && if [ \"$VERCEL_ENV\" = \"production\" ]; then bun run db:seed:games-if-empty && bun run db:sync-honeypaw && bun run db:sync-empat-sejajar-3d; fi && next build",
+    "build": "bun run lint && prisma generate && if [ \"$VERCEL_ENV\" = \"production\" ]; then bun run db:seed:games-if-empty && bun run db:sync-honeypaw && bun run db:sync-empat-sejajar-3d; fi && next build",
     "start": "next start -p 3000",
     "lint": "eslint .",
+    "test": "bun test",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",

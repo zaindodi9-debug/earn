@@ -71,6 +71,17 @@
     solitaire: ['Solitaire Cepat', 'Susun tiap jenis kartu dari As sampai Raja. Klik tumpukan untuk menarik kartu.']
   }
   const mode = new URLSearchParams(location.search).get('mode') || 'target-shooter'
+  const gameSlugs = {
+    'target-shooter': 'tembak-sasaran',
+    pinball: 'bola-pinball',
+    'tower-stack': 'tower-stack',
+    'sliding-puzzle': 'puzzle-mania',
+    blackjack: 'kartu-cepat',
+    ludo: 'ludo-sprint',
+    chess: 'catur-kilat',
+    solitaire: 'solitaire-cepat',
+  }
+  const gameSlug = gameSlugs[mode] || 'tembak-sasaran'
   const [name, help] = modes[mode] || modes['target-shooter']
   const game = document.querySelector('#game')
   const scoreEl = document.querySelector('#score')
@@ -108,10 +119,10 @@
     clearLater()
     const finalScore = Math.max(0, Math.floor(score))
     document.querySelector('#result-title').textContent = reason || 'Permainan selesai!'
-    document.querySelector('#result-detail').textContent = `Skor akhir: ${finalScore}. Hasil dikirim ke EarnGames.`
+    document.querySelector('#result-detail').textContent = `Skor akhir: ${finalScore}. Hadiah poin permainan sementara dinonaktifkan.`
     document.querySelector('#result').hidden = false
     try {
-      if (window.parent !== window) window.parent.postMessage({ type: 'EARNGAMES_GAME_RESULT', game: mode, score: finalScore, timeSec: Math.floor((Date.now()-startedAt)/1000) }, '*')
+      if (window.parent !== window) window.parent.postMessage({ type: 'EARNGAMES_GAME_RESULT', game: gameSlug, score: finalScore, timeSec: Math.floor((Date.now()-startedAt)/1000) }, '*')
     } catch (error) {
       console.error('Gagal mengirim hasil game:', error)
     }

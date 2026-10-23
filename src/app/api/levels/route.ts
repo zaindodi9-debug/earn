@@ -32,11 +32,43 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: 'Body tidak valid' }, { status: 400 })
   }
-  const gameId = String(body.gameId || '')
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Body harus berupa objek JSON' }, { status: 400 })
+  }
+
+  const gameId = String(body.gameId || '').trim()
   const levelNumber = Number(body.levelNumber)
   const name = String(body.name || '').trim()
-  if (!gameId || !Number.isFinite(levelNumber) || levelNumber < 1) {
-    return NextResponse.json({ error: 'gameId dan levelNumber wajib diisi' }, { status: 400 })
+  const difficulty = body.difficulty === undefined ? 'EASY' : String(body.difficulty)
+  const status = body.status === undefined ? 'ACTIVE' : String(body.status)
+  const targetScore = body.targetScore === undefined ? 100 : Number(body.targetScore)
+  const timeLimitSec = body.timeLimitSec === undefined ? 60 : Number(body.timeLimitSec)
+  const rewardPoints = body.rewardPoints === undefined ? 10 : Number(body.rewardPoints)
+
+  const MAX_DB_INT = 2_147_483_647
+  const MAX_LEVEL_NUMBER = 100_000
+  const MAX_TIME_LIMIT_SEC = 86_400
+
+  if (!gameId || !Number.isInteger(levelNumber) || levelNumber < 1 || levelNumber > MAX_LEVEL_NUMBER) {
+    return NextResponse.json({ error: 'gameId wajib diisi dan levelNumber harus bilangan bulat antara 1 dan 100000.' }, { status: 400 })
+  }
+  if (!Number.isInteger(targetScore) || targetScore < 1 || targetScore > MAX_DB_INT) {
+    return NextResponse.json({ error: 'targetScore harus bilangan bulat antara 1 dan 2147483647.' }, { status: 400 })
+  }
+  if (!Number.isInteger(timeLimitSec) || timeLimitSec < 1 || timeLimitSec > MAX_TIME_LIMIT_SEC) {
+    return NextResponse.json({ error: 'timeLimitSec harus bilangan bulat antara 1 dan 86400 detik.' }, { status: 400 })
+  }
+  if (!Number.isInteger(rewardPoints) || rewardPoints < 0 || rewardPoints > MAX_DB_INT) {
+    return NextResponse.json({ error: 'rewardPoints harus bilangan bulat antara 0 dan 2147483647.' }, { status: 400 })
+  }
+  if (!['EASY', 'MEDIUM', 'HARD', 'EXPERT'].includes(difficulty)) {
+    return NextResponse.json({ error: 'difficulty tidak valid.' }, { status: 400 })
+  }
+  if (!['ACTIVE', 'LOCKED'].includes(status)) {
+    return NextResponse.json({ error: 'status level tidak valid.' }, { status: 400 })
+  }
+  if (name.length > 120) {
+    return NextResponse.json({ error: 'Nama level maksimal 120 karakter.' }, { status: 400 })
   }
 
   const game = await db.game.findUnique({ where: { id: gameId } })
@@ -52,11 +84,11 @@ export async function POST(req: Request) {
       gameId,
       levelNumber,
       name: name || `${game.title} Level ${levelNumber}`,
-      difficulty: String(body.difficulty || 'EASY'),
-      targetScore: Number(body.targetScore) || 100,
-      timeLimitSec: Number(body.timeLimitSec) || 60,
-      rewardPoints: Number(body.rewardPoints) || 10,
-      status: String(body.status || 'ACTIVE'),
+      difficulty,
+      targetScore,
+      timeLimitSec,
+      rewardPoints,
+      status,
     },
   })
   return NextResponse.json({ level }, { status: 201 })

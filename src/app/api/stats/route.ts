@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       db.game.count({ where: { status: 'ACTIVE' } }),
       db.user.count({ where: { status: 'SUSPENDED' } }),
       db.userProgress.aggregate({ _sum: { attempts: true } }),
-      db.pointsLedger.aggregate({ _sum: { amount: true } }),
+      db.pointsLedger.aggregate({ where: { amount: { gt: 0 } }, _sum: { amount: true } }),
     ])
 
   // recent signups

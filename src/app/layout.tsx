@@ -19,13 +19,13 @@ export const metadata: Metadata = {
   keywords: ["game online", "poin", "level", "Indonesia", "EarnGames", "earngames.web.id"],
   authors: [{ name: "EarnGames" }],
   verification: { google: "MFTBP1pIqJDwKuUGAe15ysYpezdewwwyT8zKNS90X90" },
-  metadataBase: new URL("https://earngames.web.id"),
-  alternates: { canonical: "https://earngames.web.id" },
+  metadataBase: new URL("https://www.earngames.web.id"),
+  alternates: { canonical: "https://www.earngames.web.id" },
   openGraph: {
     title: "EarnGames — Platform Game Internal",
     description: "Mainkan game, selesaikan level, kumpulkan poin.",
     siteName: "EarnGames",
-    url: "https://earngames.web.id",
+    url: "https://www.earngames.web.id",
     type: "website",
   },
   twitter: {

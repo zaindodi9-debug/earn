@@ -77,8 +77,8 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     setRegError('')
-    if (regPassword.length < 6) {
-      setRegError('Kata sandi minimal 6 karakter')
+    if (regPassword.length < 12) {
+      setRegError('Kata sandi minimal 12 karakter')
       return
     }
     setRegLoading(true)
@@ -103,7 +103,7 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
             Masuk ke <span className="eg-gold-text">EarnGames</span>
           </DialogTitle>
           <DialogDescription className="text-gray-400">
-            Masuk untuk mulai bermain dan mengumpulkan poin, atau daftar akun baru.
+            Masuk untuk bermain dan melihat progres akun. Akun baru mendapat bonus pendaftaran 100 poin; hadiah dari skor permainan sementara dinonaktifkan.
           </DialogDescription>
         </DialogHeader>
 
@@ -182,11 +182,6 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
                   </>
                 )}
               </Button>
-              <p className="text-xs text-gray-400 text-center">
-                Coba akun demo:{' '}
-                <span className="font-mono text-yellow-300">pemain@earngames.web.id</span>{' '}
-                / <span className="font-mono text-yellow-300">demo123</span>
-              </p>
             </form>
           </TabsContent>
 
@@ -239,7 +234,7 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
                     id="reg-password"
                     type="password"
                     required
-                    placeholder="Minimal 6 karakter"
+                    placeholder="Minimal 12 karakter"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     autoComplete="new-password"

@@ -1,20 +1,20 @@
 # Panduan Integrasi Game — EarnGames (earngames.web.id)
 
-Dokumen ini untuk **developer game** yang ingin menghubungkan game HTML5 mereka ke platform EarnGames. Setelah game terhubung, skor pemain akan **otomatis tercatat** dan poin langsung masuk ke akun mereka.
+Dokumen ini menjelaskan pesan hasil game HTML5 ke EarnGames. **Saat ini, pencatatan skor dan hadiah poin dari permainan dinonaktifkan** sampai tersedia verifikasi hasil di server. Jangan menganggap `postMessage` sebagai bukti skor sah.
 
 ## Prinsip singkat
 
-Game dimuat di dalam `<iframe>` di halaman EarnGames. Karena iframe terisolasi, game **tidak bisa langsung** mengakses cookie/API platform. Solusinya: game mengirim pesan skor ke halaman induk via `window.parent.postMessage`, dan platform yang akan mencatatnya ke database.
+Game dimuat di dalam `<iframe>`. Game dapat mengirim pemberitahuan hasil ke halaman induk melalui `window.parent.postMessage`, tetapi pesan ini dikendalikan browser pemain dan dapat dipalsukan. Pesan tersebut **tidak boleh memberi poin atau mengubah progres** tanpa validasi yang dilakukan server.
 
 ```
 Game (iframe)                         EarnGames (induk)
 ─────────────                         ──────────────────
 pemain game over
 skor = 450
-parent.postMessage({               →  listener menangkap pesan
-  type: 'EARNGAMES_GAME_RESULT',      verifikasi origin
-  score: 450,                         panggil /api/progress
-  timeSec: 42                         poin masuk ke akun pemain
+parent.postMessage({               →  listener mencocokkan iframe dan game
+  type: 'EARNGAMES_GAME_RESULT',      skor ditampilkan sebagai info
+  score: 450,                         tidak mengubah poin
+  timeSec: 42                         hadiah tetap dinonaktifkan
 }, '*')
 ```
 
@@ -31,10 +31,10 @@ function kirimSkorKeEarnGames(score, timeSec) {
   if (window.parent && window.parent !== window) {
     window.parent.postMessage({
       type: 'EARNGAMES_GAME_RESULT',
-      game: 'slug-game-kamu',     // opsional, untuk identifikasi
+      game: 'slug-game-kamu',     // wajib: isi dengan slug persis dari katalog
       score: score,
       timeSec: timeSec            // opsional, durasi main dalam detik
-    }, '*');
+    }, 'https://www.earngames.web.id');
     console.log('[EarnGames] Skor terkirim:', score);
   }
 }
@@ -61,20 +61,24 @@ function onGameOver() {
 | `type` | string | ya | Harus persis `"EARNGAMES_GAME_RESULT"` |
 | `score` | number | ya | Skor akhir pemain (angka bulat >= 0) |
 | `timeSec` | number | tidak | Durasi bermain dalam detik |
-| `game` | string | tidak | Slug game (untuk debugging) |
+| `game` | string | ya | Harus sama persis dengan slug game yang sedang dimainkan |
 
 ## Keamanan
 
-- Platform **hanya menerima pesan** dari origin yang diizinkan: `https://earngames.web.id`, `http://localhost:3000` (dev), dan same-origin.
-- Pesan dari origin lain akan **ditolak** diam-diam.
-- Gunakan `'*'` sebagai `targetOrigin` di `postMessage` agar game tetap berjalan di environment mana pun — filtering dilakukan di sisi penerima.
+- Penerima mencocokkan `e.origin` dengan origin URL embed yang dikonfigurasi dan memastikan `e.source` adalah iframe game yang sedang aktif.
+- Penerima memeriksa origin dan sumber iframe yang diharapkan. Ini membantu mencegah pesan dari jendela lain, tetapi **bukan anti-cheat** dan tidak membuktikan nilai skor benar.
+- Saat game mengirim pesan ke halaman induk, gunakan `targetOrigin` spesifik `https://www.earngames.web.id` (atau `http://localhost:3000` untuk pengembangan), bukan `'*'` di produksi.
 
-## Yang terjadi setelah skor diterima
+## Status saat ini
 
-1. Platform membandingkan skor dengan `targetScore` level yang sedang dipilih pemain.
-2. Jika `score >= targetScore` **dan** pemain belum pernah menyelesaikan level ini -> pemain dapat `rewardPoints` (poin hadiah, diberikan **sekali per level**).
-3. Skor tertinggi (`highScore`) dan jumlah percobaan (`attempts`) selalu diperbarui.
-4. Pemain melihat hasilnya langsung di modal game player.
+Endpoint `POST /api/progress` mengembalikan HTTP 503 sampai hasil permainan dapat diverifikasi oleh server. Skor yang dikirim dari browser tidak disimpan dan tidak memberikan hadiah poin. Bonus pendaftaran 100 poin tetap ditangani oleh alur pendaftaran.
+
+## Syarat untuk mengaktifkan hadiah game
+
+1. Buat alur sesi permainan yang dikeluarkan dan diverifikasi oleh server.
+2. Validasi hasil pada server, termasuk identitas game, level, sesi, batas waktu, dan hasil yang dapat dipercaya.
+3. Simpan progres, hadiah, dan ledger poin dalam satu transaksi dengan perlindungan replay.
+4. Aktifkan UI pemberian poin setelah pengujian keamanan end-to-end lulus.
 
 ## Untuk admin: cara menambahkan game
 
@@ -102,11 +106,11 @@ function onGameOver() {
 
 ## FAQ
 
-**Apakah game saya perlu tahu level mana yang dipilih pemain?**
-Tidak. Pemain memilih level di UI EarnGames sebelum game dimuat. Saat skor masuk, platform otomatis mencocokkannya dengan level yang sedang aktif.
+**Apakah hadiah langsung tercatat saat game mengirim skor?**
+Tidak saat ini. Endpoint skor mengembalikan HTTP 503; pesan `postMessage` hanya pemberitahuan dari browser dan tidak menyimpan progres.
 
 **Bisakah pemain curang dengan mengirim skor palsu via console?**
-Pesan `postMessage` bisa dipalsukan dari devtools, tapi platform memverifikasi origin pengirim. Untuk anti-cheat yang lebih kuat, skor juga divalidasi server-side terhadap `targetScore`. Sistem poin bersifat **jujur dan transparan** — tidak ada manipulasi hasil.
+Pesan `postMessage` dapat dibuat oleh pemain dari devtools, dan pemeriksaan origin tidak mencegah pemalsuan skor dari konteks game itu sendiri. Karena itu, endpoint hadiah tetap dinonaktifkan sampai server memverifikasi hasil permainan.
 
 **Bagaimana kalau game saya pakai Unity WebGL / Godot Web?**
 Pakai `jslib` (Unity) atau `JavaScriptBridge` (Godot) untuk memanggil `window.parent.postMessage` dari C#/GDScript. Konsepnya sama persis.

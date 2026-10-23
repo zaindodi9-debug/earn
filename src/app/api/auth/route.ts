@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { clearAuthAttempts, consumeAuthAttempt, getClientIp } from '@/lib/auth-rate-limit'
 import {
   createSession,
   getUserFromRequest,
@@ -18,17 +19,32 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: 'Body tidak valid' }, { status: 400 })
   }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Body harus berupa objek JSON' }, { status: 400 })
+  }
+  const ip = getClientIp(req)
+  const rateLimit = await consumeAuthAttempt('register-ip', ip, 6, 60 * 60 * 1000, 60 * 60 * 1000)
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Terlalu banyak percobaan pendaftaran. Coba lagi nanti.' },
+      { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds ?? 3600) } }
+    )
+  }
+
   const email = String(body.email || '').trim().toLowerCase()
   const name = String(body.name || '').trim()
   const password = String(body.password || '')
   if (!email || !password) {
     return NextResponse.json({ error: 'Email dan kata sandi wajib diisi' }, { status: 400 })
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: 'Format email tidak valid' }, { status: 400 })
   }
-  if (password.length < 6) {
-    return NextResponse.json({ error: 'Kata sandi minimal 6 karakter' }, { status: 400 })
+  if (password.length < 12 || password.length > 128) {
+    return NextResponse.json({ error: 'Kata sandi harus berisi 12 sampai 128 karakter' }, { status: 400 })
+  }
+  if (name.length > 120) {
+    return NextResponse.json({ error: 'Nama maksimal 120 karakter' }, { status: 400 })
   }
 
   const existing = await db.user.findUnique({ where: { email } })
@@ -108,10 +124,35 @@ export async function PUT(req: Request) {
   } catch {
     return NextResponse.json({ error: 'Body tidak valid' }, { status: 400 })
   }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Body harus berupa objek JSON' }, { status: 400 })
+  }
   const email = String(body.email || '').trim().toLowerCase()
   const password = String(body.password || '')
   if (!email || !password) {
     return NextResponse.json({ error: 'Email dan kata sandi wajib diisi' }, { status: 400 })
+  }
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: 'Format email tidak valid atau terlalu panjang' }, { status: 400 })
+  }
+  if (password.length > 128) {
+    return NextResponse.json({ error: 'Kata sandi maksimal 128 karakter' }, { status: 400 })
+  }
+
+  const ip = getClientIp(req)
+  const ipLimit = await consumeAuthAttempt('login-ip', ip, 20, 15 * 60 * 1000, 15 * 60 * 1000)
+  if (!ipLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Terlalu banyak percobaan masuk dari jaringan ini. Coba lagi nanti.' },
+      { status: 429, headers: { 'Retry-After': String(ipLimit.retryAfterSeconds ?? 900) } }
+    )
+  }
+  const emailLimit = await consumeAuthAttempt('login-email', email, 10, 15 * 60 * 1000, 15 * 60 * 1000)
+  if (!emailLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Terlalu banyak percobaan masuk untuk akun ini. Coba lagi nanti.' },
+      { status: 429, headers: { 'Retry-After': String(emailLimit.retryAfterSeconds ?? 900) } }
+    )
   }
 
   const user = await db.user.findUnique({ where: { email } })
@@ -122,6 +163,9 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: 'Akun dinonaktifkan. Hubungi administrator.' }, { status: 403 })
   }
 
+  // Clear the account-specific counter after a successful login, but retain the IP counter
+  // so a successful login to one account cannot reset brute-force limits for other accounts.
+  await clearAuthAttempts('login-email', email)
   const token = await createSession(user.id)
   const res = NextResponse.json({ user: toSafeUser(user) })
   res.cookies.set(SESSION_COOKIE_NAME, token, {

@@ -24,7 +24,7 @@ const SNIPPET = `function kirimSkorKeEarnGames(score, timeSec) {
       game: 'slug-game-kamu',
       score: score,
       timeSec: timeSec
-    }, '*');
+    }, 'https://www.earngames.web.id');
   }
 }`
 
@@ -52,8 +52,7 @@ export function AdminDevDocs() {
         <DialogHeader>
           <DialogTitle>Panduan Integrasi Game</DialogTitle>
           <DialogDescription>
-            Cara menghubungkan game HTML5 kamu ke platform EarnGames (earngames.web.id) agar skor
-            otomatis tercatat dan poin masuk ke akun pemain.
+            Panduan mengirim pemberitahuan hasil dari game HTML5 ke EarnGames. Pencatatan skor dan hadiah poin sementara dinonaktifkan sampai tersedia verifikasi server.
           </DialogDescription>
         </DialogHeader>
 
@@ -65,7 +64,7 @@ export function AdminDevDocs() {
                 Game dimuat di dalam <code className="bg-muted px-1 rounded">iframe</code>. Saat game
                 over, game mengirim pesan skor ke halaman induk via{' '}
                 <code className="bg-muted px-1 rounded">window.parent.postMessage</code>. Platform
-                menangkap pesan itu, memverifikasi origin, lalu mencatat skor ke database.
+                menerima pesan dari iframe yang diharapkan. Pemeriksaan ini tidak membuktikan skor asli; API hadiah saat ini dinonaktifkan.
               </p>
             </section>
 
@@ -94,18 +93,17 @@ export function AdminDevDocs() {
                 <li><code className="bg-muted px-1 rounded">type</code> (wajib): harus persis <code className="bg-muted px-1 rounded">"EARNGAMES_GAME_RESULT"</code></li>
                 <li><code className="bg-muted px-1 rounded">score</code> (wajib): skor akhir, angka bulat ≥ 0</li>
                 <li><code className="bg-muted px-1 rounded">timeSec</code> (opsional): durasi main dalam detik</li>
-                <li><code className="bg-muted px-1 rounded">game</code> (opsional): slug game untuk debugging</li>
+                <li><code className="bg-muted px-1 rounded">game</code> (wajib): slug harus sama persis dengan katalog game yang sedang dimainkan</li>
               </ul>
             </section>
 
             <section>
               <h3 className="font-semibold text-gray-900 mb-1">Keamanan</h3>
               <p>
-                Platform hanya menerima pesan dari origin yang diizinkan:{' '}
-                <code className="bg-muted px-1 rounded">https://earngames.web.id</code>,{' '}
-                <code className="bg-muted px-1 rounded">http://localhost:3000</code> (dev), dan
-                same-origin. Pesan dari origin lain ditolak diam-diam. Gunakan{' '}
-                <code className="bg-muted px-1 rounded">'*'</code> sebagai targetOrigin di game kamu.
+                Penerima mencocokkan origin dengan URL embed yang dikonfigurasi dan memastikan pesan berasal dari iframe game aktif. Saat mengirim pesan ke halaman induk, gunakan targetOrigin spesifik{' '}
+                <code className="bg-muted px-1 rounded">https://www.earngames.web.id</code> (atau{' '}
+                <code className="bg-muted px-1 rounded">http://localhost:3000</code> saat pengembangan); jangan gunakan{' '}
+                <code className="bg-muted px-1 rounded">'*'</code> di produksi.
               </p>
             </section>
 
@@ -114,8 +112,8 @@ export function AdminDevDocs() {
               <ol className="list-decimal pl-5 space-y-1">
                 <li>Pemain memilih level di UI EarnGames, lalu game dimuat di iframe.</li>
                 <li>Saat game over, game memanggil <code className="bg-muted px-1 rounded">kirimSkorKeEarnGames(score)</code>.</li>
-                <li>Platform membandingkan skor dengan <code className="bg-muted px-1 rounded">targetScore</code> level.</li>
-                <li>Jika lulus dan belum pernah selesai → pemain dapat <code className="bg-muted px-1 rounded">rewardPoints</code> (sekali per level).</li>
+                <li>Setelah verifikasi server tersedia, platform dapat membandingkan skor dengan <code className="bg-muted px-1 rounded">targetScore</code> level.</li>
+                <li>Setelah validasi server lulus dan belum pernah selesai → pemain dapat <code className="bg-muted px-1 rounded">rewardPoints</code> (sekali per level).</li>
                 <li>Hasil tampil langsung di modal game player.</li>
               </ol>
             </section>

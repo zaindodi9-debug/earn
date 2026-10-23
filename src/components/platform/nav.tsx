@@ -81,6 +81,14 @@ export function Nav({ user, view, onOpenAuth, onLogout, onSwitchView }: Props) {
   function handleTabClick(tab: BottomTab) {
     setActiveTab(tab.key)
 
+    if (tab.key === 'leaderboard' && user && view !== 'admin') {
+      const progressSection = document.getElementById('progress')
+      if (progressSection) {
+        progressSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
+      }
+    }
+
     if (tab.anchor) {
       const el = document.querySelector(tab.anchor)
       if (el) {
@@ -104,14 +112,6 @@ export function Nav({ user, view, onOpenAuth, onLogout, onSwitchView }: Props) {
       onSwitchView('user')
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
-    }
-
-    if (tab.key === 'leaderboard' && user) {
-      const progressSection = document.getElementById('progress')
-      if (progressSection) {
-        progressSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        return
-      }
     }
 
     const targetId = tab.action === 'wallet' ? 'wallet' : tab.action === 'profile' ? 'profile' : ''

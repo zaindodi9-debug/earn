@@ -36,17 +36,34 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: 'Body tidak valid' }, { status: 400 })
   }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Body harus berupa objek JSON' }, { status: 400 })
+  }
+
   const email = String(body.email || '').trim().toLowerCase()
   const name = String(body.name || '').trim()
   const password = String(body.password || '')
-  const role = body.role === 'ADMIN' ? 'ADMIN' : 'USER'
-  const points = Number.isFinite(Number(body.points)) ? Number(body.points) : 0
+  const role = body.role === undefined ? 'USER' : body.role
+  const points = body.points === undefined ? 0 : Number(body.points)
+  const MAX_POINTS = 2_147_483_647
 
   if (!email || !password) {
     return NextResponse.json({ error: 'Email dan kata sandi wajib diisi' }, { status: 400 })
   }
-  if (password.length < 6) {
-    return NextResponse.json({ error: 'Kata sandi minimal 6 karakter' }, { status: 400 })
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: 'Format email tidak valid atau terlalu panjang' }, { status: 400 })
+  }
+  if (role !== 'ADMIN' && role !== 'USER') {
+    return NextResponse.json({ error: 'role tidak valid' }, { status: 400 })
+  }
+  if (!Number.isInteger(points) || points < 0 || points > MAX_POINTS) {
+    return NextResponse.json({ error: 'points harus bilangan bulat nonnegatif dalam batas yang diizinkan.' }, { status: 400 })
+  }
+  if (password.length < 12 || password.length > 128) {
+    return NextResponse.json({ error: 'Kata sandi harus berisi 12 sampai 128 karakter' }, { status: 400 })
+  }
+  if (name.length > 120) {
+    return NextResponse.json({ error: 'Nama maksimal 120 karakter' }, { status: 400 })
   }
 
   const existing = await db.user.findUnique({ where: { email } })
@@ -54,27 +71,30 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 409 })
   }
 
-  const user = await db.user.create({
-    data: {
-      email,
-      name: name || null,
-      passwordHash: hashPassword(password),
-      role,
-      status: 'ACTIVE',
-      points,
-    },
-  })
-
-  if (points !== 0) {
-    await db.pointsLedger.create({
+  const user = await db.$transaction(async (tx) => {
+    const created = await tx.user.create({
       data: {
-        userId: user.id,
-        amount: points,
-        reason: 'ADMIN_ADJUST',
-        reference: 'initial-balance',
+        email,
+        name: name || null,
+        passwordHash: hashPassword(password),
+        role,
+        status: 'ACTIVE',
+        points,
       },
     })
-  }
+
+    if (points !== 0) {
+      await tx.pointsLedger.create({
+        data: {
+          userId: created.id,
+          amount: points,
+          reason: 'ADMIN_ADJUST',
+          reference: 'initial-balance',
+        },
+      })
+    }
+    return created
+  })
 
   return NextResponse.json({ user: toSafeUser(user) }, { status: 201 })
 }

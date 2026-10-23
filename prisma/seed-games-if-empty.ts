@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { hashPassword } from '@/lib/auth'
+import { hashPassword, verifyPassword } from '@/lib/auth'
 import { resolveGameEmbedUrl } from '@/lib/game-embeds'
 
 const catalog = [
@@ -143,32 +143,46 @@ async function main() {
     if (initialAdminPassword.length < 16) {
       throw new Error('INITIAL_ADMIN_PASSWORD harus minimal 16 karakter.')
     }
-    await db.user.upsert({
-      where: { email: initialAdminEmail },
-      update: {
-        passwordHash: hashPassword(initialAdminPassword),
-        role: 'ADMIN',
-        status: 'ACTIVE',
-      },
-      create: {
-        email: initialAdminEmail,
-        name: 'Administrator',
-        passwordHash: hashPassword(initialAdminPassword),
-        role: 'ADMIN',
-        status: 'ACTIVE',
-        points: 0,
-      },
-    })
-    console.log(`Akun administrator awal telah dipastikan tersedia: ${initialAdminEmail}`)
+    const existingAdmin = await db.user.findUnique({ where: { email: initialAdminEmail } })
+    if (!existingAdmin) {
+      await db.user.create({
+        data: {
+          email: initialAdminEmail,
+          name: 'Administrator',
+          passwordHash: hashPassword(initialAdminPassword),
+          role: 'ADMIN',
+          status: 'ACTIVE',
+          points: 0,
+        },
+      })
+      console.log(`Akun administrator awal dibuat: ${initialAdminEmail}`)
+    } else if (!verifyPassword(initialAdminPassword, existingAdmin.passwordHash)) {
+      await db.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: existingAdmin.id },
+          data: {
+            passwordHash: hashPassword(initialAdminPassword),
+            role: 'ADMIN',
+          },
+        })
+        await tx.session.deleteMany({ where: { userId: existingAdmin.id } })
+      })
+      console.log(`Kredensial administrator dirotasi dan sesi lama dicabut: ${initialAdminEmail}`)
+    } else if (existingAdmin.role !== 'ADMIN') {
+      await db.user.update({
+        where: { id: existingAdmin.id },
+        data: { role: 'ADMIN' },
+      })
+      console.log(`Akun bootstrap dipromosikan menjadi administrator: ${initialAdminEmail}`)
+    } else {
+      console.log(`Kredensial bootstrap administrator sudah diterapkan: ${initialAdminEmail}`)
+    }
   } else {
     console.log('Bootstrap admin dilewati: INITIAL_ADMIN_EMAIL/PASSWORD belum disetel.')
   }
 
   const seeded = await db.$transaction(async (tx) => {
-    const existingCount = await tx.game.count()
-    if (existingCount > 0) {
-      return { skipped: true, games: existingCount }
-    }
+    // Reconcile every catalog entry so partially populated databases are completed safely.
 
     for (const item of catalog) {
       const game = await tx.game.upsert({
@@ -203,11 +217,7 @@ async function main() {
     return { skipped: false, games: catalog.length }
   }, { maxWait: 10_000, timeout: 60_000 })
 
-  if (seeded.skipped) {
-    console.log(`Katalog game tidak diubah: database sudah memiliki ${seeded.games} game.`)
-  } else {
-    console.log(`Katalog awal berhasil dibuat: ${seeded.games} game dengan ${seeded.games * levels.length} level aktif.`)
-  }
+  console.log(`Sinkronisasi katalog selesai: ${seeded.games} definisi game diperiksa; game dan level yang sudah ada dipertahankan, entri yang hilang ditambahkan.`)
 }
 
 main()

@@ -11,7 +11,6 @@ import {
   Minimize,
   Play,
   RotateCcw,
-  Send,
   Target,
   Timer,
   Trophy,
@@ -27,7 +26,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -47,6 +45,8 @@ type Props = {
   onClose: () => void
   onPlayed: (result: SubmitProgressResult) => void
 }
+
+const POINT_REWARDS_ENABLED = false // Keep disabled until server-authoritative scoring is implemented.
 
 const DIFFICULTY_LABEL: Record<string, string> = {
   EASY: 'Mudah',
@@ -72,7 +72,6 @@ export function GamePlayer({
 }: Props) {
   const [levelId, setLevelId] = useState<string>('')
   const [demoScore, setDemoScore] = useState<number | null>(null)
-  const [manualScore, setManualScore] = useState<string>('')
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<SubmitProgressResult | null>(null)
   const [rolling, setRolling] = useState(false)
@@ -80,6 +79,7 @@ export function GamePlayer({
   const [iframeKey, setIframeKey] = useState(0)
 
   const stageRef = useRef<HTMLDivElement>(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
   const [isBrowserFs, setIsBrowserFs] = useState(false)
 
   const activeLevels = useMemo(
@@ -96,7 +96,6 @@ export function GamePlayer({
           : activeLevels[0].id
       setLevelId(initial)
       setDemoScore(null)
-      setManualScore('')
       setResult(null)
       setPlaying(false)
     }
@@ -114,7 +113,6 @@ export function GamePlayer({
   // reset result when switching level
   useEffect(() => {
     setDemoScore(null)
-    setManualScore('')
     setResult(null)
   }, [levelId])
 
@@ -129,23 +127,32 @@ export function GamePlayer({
   // Listen for score reports from embedded games (postMessage).
   useEffect(() => {
     if (!open || !game?.embedUrl) return
-    const ALLOWED_ORIGINS = [
-      window.location.origin,
-      'https://earngames.web.id',
-      'http://localhost:3000',
-    ]
+    let expectedOrigin: string
+    try {
+      const embed = new URL(game.embedUrl, window.location.origin)
+      if (embed.protocol !== 'http:' && embed.protocol !== 'https:') return
+      expectedOrigin = embed.origin
+    } catch {
+      return
+    }
     function onMessage(e: MessageEvent) {
-      if (!ALLOWED_ORIGINS.includes(e.origin)) return
+      if (e.origin !== expectedOrigin) return
+      // Only accept messages from the exact game iframe currently opened by this modal.
+      if (!iframeRef.current || e.source !== iframeRef.current.contentWindow) return
       const d = e.data
       if (d?.type === 'EARNGAMES_MINI_GAME_CLOSE') {
         exitPlaying()
         return
       }
       if (!d || d.type !== 'EARNGAMES_GAME_RESULT') return
+      if (typeof d.game !== 'string' || d.game !== gameRef.current?.slug) return
       const score = Math.max(0, Math.floor(Number(d.score)))
       if (!Number.isFinite(score)) return
       const timeSec = Number.isFinite(Number(d.timeSec)) ? Number(d.timeSec) : undefined
-      setManualScore(String(score))
+      if (!POINT_REWARDS_ENABLED) {
+        toast.info(`Skor permainan terdeteksi (${score}), tetapi hadiah poin dinonaktifkan sementara sampai verifikasi server tersedia.`)
+        return
+      }
       toast.success(`Skor diterima: ${score}`)
       submitRef.current(score, timeSec)
     }
@@ -211,6 +218,10 @@ export function GamePlayer({
   async function submit(score: number, timeSec?: number) {
     const lv = levelRef.current
     if (!lv) return
+    if (!POINT_REWARDS_ENABLED) {
+      toast.warning('Hadiah poin sementara dinonaktifkan sampai hasil permainan dapat diverifikasi oleh server.')
+      return
+    }
     setSubmitting(true)
     try {
       const res = await submitProgress(lv.id, score, timeSec)
@@ -237,26 +248,8 @@ export function GamePlayer({
     }
   }
 
-  function submitDemo() {
-    if (demoScore == null) {
-      toast.error('Main demo dulu untuk mendapatkan skor.')
-      return
-    }
-    submit(demoScore, Math.floor(Math.random() * 30) + 30)
-  }
-
-  function submitManual() {
-    const s = Number(manualScore)
-    if (!Number.isFinite(s) || s < 0) {
-      toast.error('Masukkan skor yang valid.')
-      return
-    }
-    submit(s)
-  }
-
   function startPlaying() {
     setResult(null)
-    setManualScore('')
     setPlaying(true)
   }
 
@@ -267,7 +260,6 @@ export function GamePlayer({
 
   function playAgain() {
     setResult(null)
-    setManualScore('')
     setIframeKey((k) => k + 1) // reload iframe
   }
 
@@ -324,6 +316,7 @@ export function GamePlayer({
           {/* Game iframe — fills entire screen */}
           <div ref={stageRef} className="flex-1 bg-black relative">
             <iframe
+              ref={iframeRef}
               key={iframeKey}
               src={game.embedUrl}
               title={game.title}
@@ -399,33 +392,9 @@ export function GamePlayer({
               </div>
             )}
 
-            {/* Manual score fallback — small floating button bottom-right */}
             {!result && (
-              <div className="absolute bottom-3 right-3 z-20">
-                <details className="group">
-                  <summary className="list-none cursor-pointer bg-white/90 hover:bg-white text-gray-700 text-xs font-medium rounded-full px-3 py-1.5 shadow-lg flex items-center gap-1">
-                    <Send className="size-3" /> Input Skor Manual
-                  </summary>
-                  <div className="absolute bottom-10 right-0 bg-white rounded-lg shadow-xl border p-3 w-56 space-y-2">
-                    <p className="text-xs text-gray-500">Game tidak kirim skor otomatis? Masukkan manual:</p>
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="Skor akhir"
-                      value={manualScore}
-                      onChange={(e) => setManualScore(e.target.value)}
-                      className="h-8 text-sm"
-                    />
-                    <Button
-                      onClick={submitManual}
-                      disabled={submitting || !manualScore}
-                      className="w-full eg-gradient-bg text-white h-8 text-sm"
-                    >
-                      {submitting ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3" />}
-                      Kirim Skor
-                    </Button>
-                  </div>
-                </details>
+              <div className="absolute bottom-3 left-3 right-3 z-20 rounded-lg border border-yellow-300/30 bg-black/70 px-3 py-2 text-center text-xs text-yellow-100">
+                Pengiriman skor dan hadiah poin sedang dinonaktifkan sampai verifikasi server tersedia.
               </div>
             )}
           </div>
@@ -448,7 +417,7 @@ export function GamePlayer({
             )}
           </DialogTitle>
           <DialogDescription>
-            {game.description || 'Mainkan game internal EarnGames dan kumpulkan poin.'}
+            {game.description || 'Mainkan game internal EarnGames. Hadiah poin dari permainan sementara dinonaktifkan sampai verifikasi server tersedia.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -487,8 +456,8 @@ export function GamePlayer({
           <InfoTile
             icon={<Award className="size-4" />}
             label="Hadiah Poin"
-            value={`+${level.rewardPoints}`}
-            badgeClass="bg-green-100 text-green-700 border-green-200"
+            value={POINT_REWARDS_ENABLED ? `+${level.rewardPoints}` : 'Nonaktif sementara'}
+            badgeClass={POINT_REWARDS_ENABLED ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-700 border-gray-200'}
           />
           <InfoTile
             icon={<Clock className="size-4" />}
@@ -506,8 +475,7 @@ export function GamePlayer({
               </div>
               <h4 className="font-semibold text-gray-900 mb-1">Siap Bermain?</h4>
               <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-                Game akan dibuka dalam mode layar penuh. Skor dikirim otomatis saat permainan
-                selesai — poin langsung masuk ke akunmu.
+                Game akan dibuka dalam mode layar penuh. Permainan dapat dimainkan, tetapi hadiah poin sementara dinonaktifkan sampai hasil dapat diverifikasi oleh server.
               </p>
               <Button
                 onClick={startPlaying}
@@ -524,8 +492,7 @@ export function GamePlayer({
               <Dices className="size-12 mx-auto text-green-600 mb-3" />
               <h4 className="font-semibold text-gray-900 mb-1">Game sedang disiapkan</h4>
               <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-                Coba mode demo untuk menguji alur poin. Sistem akan mengacak skor (50–650) dan kamu
-                bisa mengirimnya untuk melihat bagaimana poin diberikan.
+                Mode demo hanya untuk mencoba antarmuka. Skor acak tidak disimpan sebagai progres dan tidak menghasilkan hadiah poin.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                 <Button onClick={rollDemo} disabled={rolling} className="eg-gradient-bg text-white">
@@ -542,9 +509,8 @@ export function GamePlayer({
             </div>
 
             {demoScore != null && (
-              <Button onClick={submitDemo} disabled={submitting} className="w-full eg-gradient-bg text-white">
-                {submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-                Kirim Skor ({demoScore})
+              <Button type="button" disabled className="w-full opacity-70">
+                Hadiah poin sementara nonaktif
               </Button>
             )}
 

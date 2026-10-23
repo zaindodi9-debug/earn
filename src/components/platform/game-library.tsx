@@ -52,7 +52,7 @@ const CATEGORY_GRADIENT: Record<string, string> = {
 // Category chips (filter) — order matters
 const FILTER_CHIPS: { key: string; label: string }[] = [
   { key: 'all', label: 'Semua' },
-  { key: 'populer', label: 'Populer' },
+  { key: 'bisa-dimainkan', label: 'Bisa Dimainkan' },
   { key: 'arcade', label: 'Arcade' },
   { key: 'puzzle', label: 'Puzzle' },
   { key: 'card', label: 'Kartu' },
@@ -104,12 +104,7 @@ export function GameLibrary({ user, onOpenAuth, onPlayed }: Props) {
 
   const filteredGames = useMemo(() => {
     if (filter === 'all') return games
-    if (filter === 'populer') {
-      // simple heuristic: games with embedUrl come first (already playable)
-      return [...games].sort(
-        (a, b) => Number(!!b.embedUrl) - Number(!!a.embedUrl)
-      )
-    }
+    if (filter === 'bisa-dimainkan') return games.filter((g) => !!g.embedUrl)
     return games.filter((g) => g.category === filter)
   }, [games, filter])
 
@@ -124,11 +119,11 @@ export function GameLibrary({ user, onOpenAuth, onPlayed }: Props) {
             <Sparkles className="size-3" /> Pustaka Game
           </Badge>
           <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-white mb-2">
-            Pilih Game, Selesaikan Level, Kumpulkan Poin
+            Pilih Game, Tantang Diri, Pantau Progres
           </h2>
           <p className="text-xs sm:text-base text-gray-400 hidden sm:block max-w-2xl mx-auto">
             Semua game di EarnGames adalah game internal yang dibuat dan dikelola oleh
-            tim kami. Setiap level punya target skor dan hadiah poin yang jelas.
+            tim kami. Setiap level memiliki target skor. Hadiah poin permainan sementara dinonaktifkan sampai hasil dapat diverifikasi oleh server.
           </p>
         </div>
 
@@ -226,7 +221,6 @@ export function GameLibrary({ user, onOpenAuth, onPlayed }: Props) {
 
 function GameCard({ game, onPlay }: { game: Game; onPlay: () => void }) {
   const activeLevels = (game.levels || []).filter((l) => l.status === 'ACTIVE')
-  const totalReward = activeLevels.reduce((sum, l) => sum + l.rewardPoints, 0)
   const hasEmbed = !!game.embedUrl
   const gradient = CATEGORY_GRADIENT[game.category] || CATEGORY_GRADIENT.arcade
   const icon = CATEGORY_ICON[game.category] || <Gamepad2 className="size-10" />
@@ -300,7 +294,7 @@ function GameCard({ game, onPlay }: { game: Game; onPlay: () => void }) {
       {/* Body — compact on mobile */}
       <div className="p-2 sm:p-4 space-y-1.5 sm:space-y-3">
         <p className="hidden sm:block text-xs text-gray-400 line-clamp-2 min-h-[2.5rem]">
-          {game.description || 'Game internal EarnGames. Mainkan dan kumpulkan poin.'}
+          {game.description || 'Game internal EarnGames. Bonus pendaftaran 100 poin tersedia; hadiah permainan sementara nonaktif.'}
         </p>
 
         {/* Stats row — gold for points */}
@@ -311,7 +305,7 @@ function GameCard({ game, onPlay }: { game: Game; onPlay: () => void }) {
           </span>
           <span className="inline-flex items-center gap-1 text-yellow-400 font-bold">
             <Trophy className="size-3.5" />
-            +{totalReward} Poin Maks
+            Hadiah nonaktif
           </span>
         </div>
         {/* compact stats on mobile */}
@@ -322,7 +316,7 @@ function GameCard({ game, onPlay }: { game: Game; onPlay: () => void }) {
           </span>
           <span className="inline-flex items-center gap-1 text-yellow-300 font-bold">
             <Trophy className="size-3" />
-            +{totalReward} Poin
+            Poin nonaktif
           </span>
         </div>
 
