@@ -449,8 +449,8 @@ function CreateUserDialog({
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (password.length < 6) {
-      setError('Kata sandi minimal 6 karakter')
+    if (password.length < 12) {
+      setError('Kata sandi minimal 12 karakter')
       return
     }
     setLoading(true)
@@ -490,7 +490,7 @@ function CreateUserDialog({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="cu-password">Kata Sandi</Label>
-            <Input id="cu-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min. 6 karakter" />
+            <Input id="cu-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min. 12 karakter" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -561,8 +561,8 @@ function EditUserDialog({
     try {
       const body: any = { name, email, role, status }
       if (password) {
-        if (password.length < 6) {
-          setError('Kata sandi minimal 6 karakter')
+        if (password.length < 12) {
+          setError('Kata sandi minimal 12 karakter')
           setLoading(false)
           return
         }
