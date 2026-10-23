@@ -19,9 +19,17 @@ export function hashPassword(password: string): string {
 
 export function verifyPassword(password: string, stored: string): boolean {
   const [salt, hash] = stored.split(':')
-  if (!salt || !hash) return false
-  const test = crypto.scryptSync(password, salt, 64).toString('hex')
-  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(test, 'hex'))
+  // A malformed stored hash must fail authentication, not throw a server error.
+  if (!salt || !/^[a-f0-9]{32}$/i.test(salt) || !hash || !/^[a-f0-9]{128}$/i.test(hash)) {
+    return false
+  }
+  try {
+    const expected = Buffer.from(hash, 'hex')
+    const actual = Buffer.from(crypto.scryptSync(password, salt, 64).toString('hex'), 'hex')
+    return expected.length === actual.length && crypto.timingSafeEqual(expected, actual)
+  } catch {
+    return false
+  }
 }
 
 /* ---------------- session token (HMAC-signed) ---------------- */
@@ -36,11 +44,18 @@ export function createToken(userId: string): string {
 export function verifyToken(token: string): { uid: string; exp: number } | null {
   const [body, sig] = token.split('.')
   if (!body || !sig) return null
-  const expected = crypto.createHmac('sha256', SECRET).update(body).digest('base64url')
-  if (sig !== expected) return null
+  const expected = crypto.createHmac('sha256', SECRET).update(body).digest()
   try {
+    const supplied = Buffer.from(sig, 'base64url')
+    if (supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) return null
     const payload = JSON.parse(Buffer.from(body, 'base64url').toString())
-    if (payload.exp < Date.now()) return null
+    if (
+      !payload ||
+      typeof payload.uid !== 'string' ||
+      typeof payload.exp !== 'number' ||
+      !Number.isFinite(payload.exp) ||
+      payload.exp < Date.now()
+    ) return null
     return payload
   } catch {
     return null
