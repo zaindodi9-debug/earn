@@ -20,7 +20,10 @@ export async function GET(req: Request) {
   const games = await db.game.findMany({
     where: isAdmin ? {} : { status: 'ACTIVE' },
     include: {
-      levels: { orderBy: { levelNumber: 'asc' } },
+      levels: {
+        where: isAdmin ? {} : { status: 'ACTIVE' },
+        orderBy: { levelNumber: 'asc' },
+      },
     },
     orderBy: { sortOrder: 'asc' },
   })
