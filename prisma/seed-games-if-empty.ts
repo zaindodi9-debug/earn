@@ -163,12 +163,17 @@ async function main() {
           data: {
             passwordHash: hashPassword(initialAdminPassword),
             role: 'ADMIN',
-            status: 'ACTIVE',
           },
         })
         await tx.session.deleteMany({ where: { userId: existingAdmin.id } })
       })
       console.log(`Kredensial administrator dirotasi dan sesi lama dicabut: ${initialAdminEmail}`)
+    } else if (existingAdmin.role !== 'ADMIN') {
+      await db.user.update({
+        where: { id: existingAdmin.id },
+        data: { role: 'ADMIN' },
+      })
+      console.log(`Akun bootstrap dipromosikan menjadi administrator: ${initialAdminEmail}`)
     } else {
       console.log(`Kredensial bootstrap administrator sudah diterapkan: ${initialAdminEmail}`)
     }
