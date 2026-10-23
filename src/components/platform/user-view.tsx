@@ -118,7 +118,7 @@ const FAQS = [
   },
   {
     q: 'Apakah poin bisa ditukar dengan hadiah?',
-    a: 'Saat ini poin berfungsi sebagai pencapaian dan posisi di papan peringkat. Fitur penukaran hadiah akan datang di pembaruan berikutnya.',
+    a: 'Saat ini poin belum dapat ditukar dengan hadiah. Fitur penukaran belum tersedia.'
   },
   {
     q: 'Apakah ada batas usia?',
@@ -154,8 +154,8 @@ export function UserView({ user, onOpenAuth, onPlayed }: Props) {
                 <Sparkles className="size-3" /> Platform Game Internal
               </Badge>
               <h1 className="text-3xl md:text-5xl font-extrabold leading-[1.1] mb-5">
-                Main Game, Dapat{' '}
-                <span className="eg-gold-text">Poin Hadiah</span> Menarik
+                Mainkan Game, Dapatkan{' '}
+                <span className="eg-gold-text">Bonus Poin Awal</span>
               </h1>
               <p className="text-sm md:text-base text-gray-300 mb-7 max-w-lg">
                 EarnGames adalah platform game internal. Pilih dan mainkan game yang tersedia.
@@ -280,7 +280,7 @@ export function UserView({ user, onOpenAuth, onPlayed }: Props) {
                 <Award className="size-3" /> Tips Bermain
               </Badge>
               <h2 className="text-2xl md:text-4xl font-extrabold text-white mb-6">
-                Tips Memaksimalkan Poin Kamu
+                Tips Memulai Bermain
               </h2>
               <div className="space-y-4">
                 {TIPS.map((t, i) => (
