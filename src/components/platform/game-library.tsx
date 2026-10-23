@@ -119,11 +119,11 @@ export function GameLibrary({ user, onOpenAuth, onPlayed }: Props) {
             <Sparkles className="size-3" /> Pustaka Game
           </Badge>
           <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-white mb-2">
-            Pilih Game, Selesaikan Level, Kumpulkan Poin
+            Pilih Game, Tantang Diri, Pantau Progres
           </h2>
           <p className="text-xs sm:text-base text-gray-400 hidden sm:block max-w-2xl mx-auto">
             Semua game di EarnGames adalah game internal yang dibuat dan dikelola oleh
-            tim kami. Setiap level punya target skor dan hadiah poin yang jelas.
+            tim kami. Setiap level memiliki target skor. Hadiah poin permainan sementara dinonaktifkan sampai hasil dapat diverifikasi oleh server.
           </p>
         </div>
 
