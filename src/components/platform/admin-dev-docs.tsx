@@ -52,8 +52,7 @@ export function AdminDevDocs() {
         <DialogHeader>
           <DialogTitle>Panduan Integrasi Game</DialogTitle>
           <DialogDescription>
-            Cara menghubungkan game HTML5 kamu ke platform EarnGames (earngames.web.id) agar skor
-            otomatis tercatat dan poin masuk ke akun pemain.
+            Panduan mengirim pemberitahuan hasil dari game HTML5 ke EarnGames. Pencatatan skor dan hadiah poin sementara dinonaktifkan sampai tersedia verifikasi server.
           </DialogDescription>
         </DialogHeader>
 
@@ -65,7 +64,7 @@ export function AdminDevDocs() {
                 Game dimuat di dalam <code className="bg-muted px-1 rounded">iframe</code>. Saat game
                 over, game mengirim pesan skor ke halaman induk via{' '}
                 <code className="bg-muted px-1 rounded">window.parent.postMessage</code>. Platform
-                menangkap pesan itu, memverifikasi origin, lalu mencatat skor ke database.
+                menerima pesan dari iframe yang diharapkan. Pemeriksaan ini tidak membuktikan skor asli; API hadiah saat ini dinonaktifkan.
               </p>
             </section>
 
@@ -114,8 +113,8 @@ export function AdminDevDocs() {
               <ol className="list-decimal pl-5 space-y-1">
                 <li>Pemain memilih level di UI EarnGames, lalu game dimuat di iframe.</li>
                 <li>Saat game over, game memanggil <code className="bg-muted px-1 rounded">kirimSkorKeEarnGames(score)</code>.</li>
-                <li>Platform membandingkan skor dengan <code className="bg-muted px-1 rounded">targetScore</code> level.</li>
-                <li>Jika lulus dan belum pernah selesai → pemain dapat <code className="bg-muted px-1 rounded">rewardPoints</code> (sekali per level).</li>
+                <li>Setelah verifikasi server tersedia, platform dapat membandingkan skor dengan <code className="bg-muted px-1 rounded">targetScore</code> level.</li>
+                <li>Setelah validasi server lulus dan belum pernah selesai → pemain dapat <code className="bg-muted px-1 rounded">rewardPoints</code> (sekali per level).</li>
                 <li>Hasil tampil langsung di modal game player.</li>
               </ol>
             </section>
