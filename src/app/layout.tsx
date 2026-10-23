@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "Mainkan game internal EarnGames, selesaikan level, dan kumpulkan poin. Platform game dengan sistem poin yang jujur dan transparan.",
   keywords: ["game online", "poin", "level", "Indonesia", "EarnGames", "earngames.web.id"],
   authors: [{ name: "EarnGames" }],
-  verification: { google: "MFTBP1pIqJDwKuUGAe15ysYpezdewwwyT8zKNS90" },
+  verification: { google: "MFTBP1pIqJDwKuUGAe15ysYpezdewwwyT8zKNS90X90" },
   metadataBase: new URL("https://earngames.web.id"),
   alternates: { canonical: "https://earngames.web.id" },
   openGraph: {
