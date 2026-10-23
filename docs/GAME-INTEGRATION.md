@@ -61,7 +61,7 @@ function onGameOver() {
 | `type` | string | ya | Harus persis `"EARNGAMES_GAME_RESULT"` |
 | `score` | number | ya | Skor akhir pemain (angka bulat >= 0) |
 | `timeSec` | number | tidak | Durasi bermain dalam detik |
-| `game` | string | tidak | Slug game (untuk debugging) |
+| `game` | string | ya | Harus sama persis dengan slug game yang sedang dimainkan |
 
 ## Keamanan
 
