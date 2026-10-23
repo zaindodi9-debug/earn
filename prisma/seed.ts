@@ -141,6 +141,16 @@ async function main() {
       embedUrl: '/games/honeypaw.html',
       status: 'ACTIVE',
     },
+    {
+      title: 'Empat Sejajar 3D',
+      slug: 'empat-sejajar-3d',
+      description: 'Permainan strategi papan 3D. Letakkan bidak pada papan bertingkat dan jadilah pemain pertama yang menyusun empat bidak segaris.',
+      category: 'strategy',
+      sortOrder: 13,
+      thumbnailUrl: '/images/game-empat-sejajar-3d.svg',
+      embedUrl: '/games/empat-sejajar-3d.html',
+      status: 'ACTIVE',
+    },
   ]
 
   for (const g of games) {

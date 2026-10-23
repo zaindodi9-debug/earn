@@ -6,6 +6,7 @@ export const GAME_EMBED_URLS: Record<string, string> = {
   'penalti-sepak-bola': '/games/penalti.html',
   'grand-city-auto': '/games/grand-city-auto.html',
   'honeypaw': '/games/honeypaw.html',
+  'empat-sejajar-3d': '/games/empat-sejajar-3d.html',
   'tembak-sasaran': '/games/mini-arcade.html?mode=target-shooter',
   'bola-pinball': '/games/mini-arcade.html?mode=pinball',
   'solitaire-cepat': '/games/mini-arcade.html?mode=solitaire',

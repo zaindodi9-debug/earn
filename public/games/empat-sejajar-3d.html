@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Empat Sejajar 3D | EarnGames</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #07111f;
+    color: #e5e7eb;
+    font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    cursor: grab;
+  }
+  canvas.dragging { cursor: grabbing; }
+  /* Cap merek EarnGames */
+  #earnGamesStamp{position:fixed;right:14px;bottom:14px;z-index:20;display:flex;align-items:center;gap:8px;
+    padding:8px 12px 8px 8px;border:1px solid rgba(250,204,21,.42);border-radius:999px;
+    background:rgba(15,23,42,.86);color:#f8fafc;box-shadow:0 8px 26px rgba(0,0,0,.35);
+    backdrop-filter:blur(8px);pointer-events:none;line-height:1;}
+  #earnGamesStamp .mark{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;
+    background:linear-gradient(145deg,#fef08a,#f59e0b);color:#422006;font-size:10px;font-weight:900;}
+  #earnGamesStamp .brand{font-size:10px;font-weight:900;letter-spacing:.16em;}
+  #earnGamesStamp .sub{font-size:8px;color:#facc15;font-weight:700;letter-spacing:.08em;margin-top:4px;}
+  @media(max-width:620px){
+    #hud{top:8px;left:8px;right:8px;gap:6px;align-items:flex-start;}
+    .panel{padding:8px 9px;border-radius:11px;}
+    h1{font-size:16px;letter-spacing:0;}
+    #status{font-size:12px;max-width:50vw;}
+    #coord{font-size:10px;}
+    #buttons{max-width:45vw;gap:5px;padding:6px;justify-content:center;}
+    button{font-size:11px;padding:7px 8px;}
+    #help{left:8px;right:8px;bottom:8px;max-width:none;font-size:10px;line-height:1.3;padding:7px 9px;padding-right:170px;}
+    #earnGamesStamp{right:8px;bottom:8px;gap:5px;padding:5px 7px 5px 5px;}
+    #earnGamesStamp .mark{width:22px;height:22px;font-size:8px;border-radius:7px;}
+    #earnGamesStamp .brand{font-size:8px;}
+    #earnGamesStamp .sub{font-size:6px;}
+  }
+  #hud {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    pointer-events: none;
+  }
+  .panel {
+    pointer-events: auto;
+    background: rgb(15 23 42 / 0.84);
+    border: 1px solid rgb(148 163 184 / 0.28);
+    box-shadow: 0 8px 28px rgb(0 0 0 / 0.28);
+    border-radius: 14px;
+    padding: 12px 14px;
+    backdrop-filter: blur(8px);
+  }
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    letter-spacing: 0.5px;
+  }
+  #status {
+    margin-top: 6px;
+    color: #cbd5e1;
+    font-size: 15px;
+  }
+  #coord {
+    color: #94a3b8;
+    margin-top: 4px;
+    font-size: 13px;
+  }
+  #buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: end;
+  }
+  button {
+    border: 1px solid rgb(148 163 184 / 0.32);
+    border-radius: 10px;
+    padding: 9px 12px;
+    background: #111827;
+    color: #e5e7eb;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  button:hover { background: #1f2937; }
+  #help {
+    position: fixed;
+    left: 14px;
+    bottom: 14px;
+    max-width: 560px;
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 99px;
+    vertical-align: -1px;
+    margin-right: 6px;
+  }
+  .p1 { background: #ef4444; }
+  .p2 { background: #3b82f6; }
+</style>
+</head>
+<body>
+<canvas id="canvas" aria-label="Papan permainan Empat Sejajar 3D"></canvas>
+<div id="earnGamesStamp" aria-label="Game dari EarnGames"><span class="mark">EG</span><span><div class="brand">EARNGAMES</div><div class="sub">EMPAT SEJAJAR 3D</div></span></div>
+
+<div id="hud">
+  <div class="panel">
+    <h1>Empat Sejajar 3D</h1>
+    <div id="status"></div>
+    <div id="coord"></div>
+  </div>
+  <div id="buttons" class="panel">
+    <button id="newGame">Permainan Baru</button>
+    <button id="resetView">Atur Ulang Tampilan</button>
+  </div>
+</div>
+
+<div id="help" class="panel">
+  Geser untuk memutar papan. Gulir roda tetikus untuk memperbesar atau memperkecil. Tahan Shift atau gunakan klik kanan sambil menggeser untuk mengubah posisi kamera.<br />
+  Klik titik bercahaya yang sah untuk meletakkan bidak.<br />
+  Bidak dapat diletakkan pada bidang paling bawah atau tepat di atas ruang yang sudah terisi.<br />
+  Pemain pertama yang membentuk 4 bidak segaris dalam ruang 3D menjadi pemenang.
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const N = 5;
+  const WIN = 4;
+  const EMPTY = 0;
+  const CELL = 1.18;
+
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const statusEl = document.getElementById("status");
+  const coordEl = document.getElementById("coord");
+
+  let dpr = 1;
+  let w = 0;
+  let h = 0;
+
+  let board = [];
+  let current = 1;
+  let gameOver = false;
+  let winning = new Set();
+
+  let yaw = -0.72;
+  let pitch = -0.55;
+  let zoom = 92;
+  let panX = 0;
+  let panY = 10;
+
+  let dragging = false;
+  let panning = false;
+  let movedDuringDrag = false;
+  let lastX = 0;
+  let lastY = 0;
+
+  let hover = null;
+  let drawItems = [];
+
+  const colors = {
+    bg1: "#07111f",
+    bg2: "#0f172a",
+    grid: "rgba(191, 219, 254, 0.38)",
+    gridDim: "rgba(148, 163, 184, 0.20)",
+    p1: "#ef4444",
+    p1Dark: "#991b1b",
+    p2: "#3b82f6",
+    p2Dark: "#1d4ed8",
+    legal: "#38bdf8",
+    legalGlow: "rgba(56, 189, 248, 0.40)",
+    hover: "#facc15",
+    win: "#facc15",
+    text: "#e5e7eb"
+  };
+
+  function idx(x, y, z) {
+    return z * N * N + y * N + x;
+  }
+
+  function get(x, y, z) {
+    return board[idx(x, y, z)];
+  }
+
+  function setCell(x, y, z, value) {
+    board[idx(x, y, z)] = value;
+  }
+
+  function key(x, y, z) {
+    return `${x},${y},${z}`;
+  }
+
+  function inBounds(x, y, z) {
+    return x >= 0 && x < N && y >= 0 && y < N && z >= 0 && z < N;
+  }
+
+  function isLegal(x, y, z) {
+    if (gameOver || get(x, y, z) !== EMPTY) return false;
+    return z === 0 || get(x, y, z - 1) !== EMPTY;
+  }
+
+  function centered(v) {
+    return (v - (N - 1) / 2) * CELL;
+  }
+
+  function worldPoint(x, y, z) {
+    return {
+      x: centered(x),
+      y: centered(z),
+      z: centered(y)
+    };
+  }
+
+  function rotatePoint(p) {
+    const cy = Math.cos(yaw), sy = Math.sin(yaw);
+    const cp = Math.cos(pitch), sp = Math.sin(pitch);
+
+    const x1 = p.x * cy - p.z * sy;
+    const z1 = p.x * sy + p.z * cy;
+
+    const y2 = p.y * cp - z1 * sp;
+    const z2 = p.y * sp + z1 * cp;
+
+    return { x: x1, y: y2, z: z2 };
+  }
+
+  function project(p) {
+    const r = rotatePoint(p);
+    const distance = 11;
+    const perspective = distance / (distance + r.z);
+    return {
+      x: w / 2 + panX + r.x * zoom * perspective,
+      y: h / 2 + panY - r.y * zoom * perspective,
+      depth: r.z,
+      scale: perspective
+    };
+  }
+
+  function projectCell(x, y, z) {
+    return project(worldPoint(x, y, z));
+  }
+
+  function resize() {
+    dpr = Math.max(1, Math.min(devicePixelRatio || 1, 2));
+    w = innerWidth;
+    h = innerHeight;
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+  }
+
+  function background() {
+    const g = ctx.createRadialGradient(w * 0.5, h * 0.45, 60, w * 0.5, h * 0.55, Math.max(w, h) * 0.75);
+    g.addColorStop(0, colors.bg2);
+    g.addColorStop(1, colors.bg1);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  function line3d(a, b, color, width = 1) {
+    const pa = project(a);
+    const pb = project(b);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    ctx.lineTo(pb.x, pb.y);
+    ctx.stroke();
+  }
+
+  function drawGrid() {
+    ctx.save();
+    ctx.lineCap = "round";
+
+    for (let x = 0; x < N; x++) {
+      for (let y = 0; y < N; y++) {
+        line3d(worldPoint(x, y, 0), worldPoint(x, y, N - 1), colors.gridDim, 1);
+      }
+      for (let z = 0; z < N; z++) {
+        line3d(worldPoint(x, 0, z), worldPoint(x, N - 1, z), colors.grid, 1);
+      }
+    }
+
+    for (let y = 0; y < N; y++) {
+      for (let z = 0; z < N; z++) {
+        line3d(worldPoint(0, y, z), worldPoint(N - 1, y, z), colors.grid, 1);
+      }
+    }
+
+    const min = centered(0);
+    const max = centered(N - 1);
+    line3d({x:min, y:min - 0.55, z:min}, {x:max, y:min - 0.55, z:min}, "#ef4444", 2);
+    line3d({x:min, y:min - 0.55, z:min}, {x:min, y:min - 0.55, z:max}, "#22c55e", 2);
+    line3d({x:min - 0.55, y:min, z:min}, {x:min - 0.55, y:max, z:min}, "#3b82f6", 2);
+
+    label3d("X", {x:max + 0.5, y:min - 0.55, z:min}, "#ef4444");
+    label3d("Y", {x:min, y:min - 0.55, z:max + 0.5}, "#22c55e");
+    label3d("Z", {x:min - 0.55, y:max + 0.45, z:min}, "#3b82f6");
+
+    ctx.restore();
+  }
+
+  function label3d(text, p, color) {
+    const q = project(p);
+    ctx.fillStyle = color;
+    ctx.font = "700 20px system-ui";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, q.x, q.y);
+  }
+
+  function makeDrawItems() {
+    drawItems = [];
+
+    for (let z = 0; z < N; z++) {
+      for (let y = 0; y < N; y++) {
+        for (let x = 0; x < N; x++) {
+          const v = get(x, y, z);
+          const p = projectCell(x, y, z);
+
+          if (v !== EMPTY) {
+            drawItems.push({
+              type: "piece",
+              x, y, z,
+              player: v,
+              sx: p.x,
+              sy: p.y,
+              depth: p.depth,
+              scale: p.scale
+            });
+          } else if (isLegal(x, y, z)) {
+            drawItems.push({
+              type: "legal",
+              x, y, z,
+              sx: p.x,
+              sy: p.y,
+              depth: p.depth,
+              scale: p.scale
+            });
+          }
+        }
+      }
+    }
+
+    drawItems.sort((a, b) => b.depth - a.depth);
+  }
+
+  function drawLegal(item) {
+    const isHover = hover && hover.x === item.x && hover.y === item.y && hover.z === item.z;
+    const r = (isHover ? 14 : 10) * item.scale;
+
+    ctx.save();
+    ctx.globalAlpha = isHover ? 0.95 : 0.72;
+    ctx.shadowColor = isHover ? colors.hover : colors.legal;
+    ctx.shadowBlur = isHover ? 24 : 17;
+
+    ctx.fillStyle = isHover ? colors.hover : colors.legal;
+    ctx.beginPath();
+    ctx.arc(item.sx, item.sy, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.30;
+    ctx.fillStyle = isHover ? colors.hover : colors.legalGlow;
+    ctx.beginPath();
+    ctx.arc(item.sx, item.sy, r * 2.0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawPiece(item) {
+    const r = 23 * item.scale;
+    const height = 10 * item.scale;
+    const topColor = item.player === 1 ? colors.p1 : colors.p2;
+    const sideColor = item.player === 1 ? colors.p1Dark : colors.p2Dark;
+    const isWin = winning.has(key(item.x, item.y, item.z));
+
+    ctx.save();
+
+    ctx.fillStyle = sideColor;
+    ctx.beginPath();
+    ctx.ellipse(item.sx, item.sy + height * 0.55, r, r * 0.36, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const grad = ctx.createLinearGradient(item.sx - r, item.sy - r, item.sx + r, item.sy + r);
+    grad.addColorStop(0, topColor);
+    grad.addColorStop(1, sideColor);
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(item.sx - r, item.sy - height * 0.25, r * 2, height, 4 * item.scale);
+    ctx.fill();
+
+    ctx.fillStyle = topColor;
+    ctx.shadowColor = topColor;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.ellipse(item.sx, item.sy - height * 0.25, r, r * 0.38, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.34)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.ellipse(item.sx, item.sy - height * 0.25, r * 0.84, r * 0.27, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    if (isWin) {
+      ctx.shadowColor = colors.win;
+      ctx.shadowBlur = 26;
+      ctx.strokeStyle = colors.win;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.ellipse(item.sx, item.sy - height * 0.25, r * 1.18, r * 0.50, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawWinningLine() {
+    if (winning.size < WIN) return;
+
+    const pts = [...winning].map(s => {
+      const [x, y, z] = s.split(",").map(Number);
+      const p = projectCell(x, y, z);
+      return { x: p.x, y: p.y, depth: p.depth };
+    }).sort((a, b) => a.depth - b.depth);
+
+    ctx.save();
+    ctx.strokeStyle = colors.win;
+    ctx.shadowColor = colors.win;
+    ctx.shadowBlur = 18;
+    ctx.lineWidth = 6;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function draw() {
+    background();
+    drawGrid();
+    makeDrawItems();
+    for (const item of drawItems) {
+      if (item.type === "legal") drawLegal(item);
+      else drawPiece(item);
+    }
+    drawWinningLine();
+  }
+
+  function makeDirections() {
+    const dirs = [];
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dz = -1; dz <= 1; dz++) {
+          if (dx === 0 && dy === 0 && dz === 0) continue;
+          if (dx < 0) continue;
+          if (dx === 0 && dy < 0) continue;
+          if (dx === 0 && dy === 0 && dz < 0) continue;
+          dirs.push([dx, dy, dz]);
+        }
+      }
+    }
+    return dirs;
+  }
+
+  const directions = makeDirections();
+
+  function checkWin(player) {
+    for (let z = 0; z < N; z++) {
+      for (let y = 0; y < N; y++) {
+        for (let x = 0; x < N; x++) {
+          if (get(x, y, z) !== player) continue;
+
+          for (const [dx, dy, dz] of directions) {
+            const bx = x - dx, by = y - dy, bz = z - dz;
+            if (inBounds(bx, by, bz) && get(bx, by, bz) === player) continue;
+
+            const line = [];
+            for (let k = 0; k < WIN; k++) {
+              const nx = x + dx * k;
+              const ny = y + dy * k;
+              const nz = z + dz * k;
+              if (!inBounds(nx, ny, nz) || get(nx, ny, nz) !== player) break;
+              line.push([nx, ny, nz]);
+            }
+            if (line.length === WIN) return line;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  function fullBoard() {
+    return board.every(v => v !== EMPTY);
+  }
+
+  function updateStatus() {
+    if (gameOver) return;
+    const cls = current === 1 ? "p1" : "p2";
+    statusEl.innerHTML = `<span class="dot ${cls}"></span>Giliran Pemain ${current}`;
+  }
+
+  function place(x, y, z) {
+    if (!isLegal(x, y, z)) return;
+
+    setCell(x, y, z, current);
+    const winLine = checkWin(current);
+
+    if (winLine) {
+      gameOver = true;
+      winning = new Set(winLine.map(([x, y, z]) => key(x, y, z)));
+      const cls = current === 1 ? "p1" : "p2";
+      statusEl.innerHTML = `<span class="dot ${cls}"></span>Pemain ${current} menang!`;
+    } else if (fullBoard()) {
+      gameOver = true;
+      statusEl.textContent = "Seri! Papan penuh.";
+    } else {
+      current = current === 1 ? 2 : 1;
+      updateStatus();
+    }
+
+    hover = null;
+    coordEl.textContent = "";
+    draw();
+  }
+
+  function findHover(mx, my) {
+    let best = null;
+    let bestDist = Infinity;
+
+    for (const item of drawItems) {
+      if (item.type !== "legal") continue;
+      const r = 19 * item.scale;
+      const dx = mx - item.sx;
+      const dy = my - item.sy;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist <= r && dist < bestDist) {
+        best = item;
+        bestDist = dist;
+      }
+    }
+
+    return best ? { x: best.x, y: best.y, z: best.z } : null;
+  }
+
+  function pointerXY(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  }
+
+  canvas.addEventListener("pointerdown", e => {
+    canvas.setPointerCapture(e.pointerId);
+    dragging = true;
+    panning = e.button === 2 || e.shiftKey;
+    movedDuringDrag = false;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    canvas.classList.add("dragging");
+  });
+
+  canvas.addEventListener("pointermove", e => {
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+
+    if (dragging) {
+      if (Math.abs(dx) + Math.abs(dy) > 2) movedDuringDrag = true;
+
+      if (panning || e.shiftKey) {
+        panX += dx;
+        panY += dy;
+      } else {
+        yaw += dx * 0.008;
+        pitch += dy * 0.008;
+        pitch = Math.max(-1.35, Math.min(1.35, pitch));
+      }
+
+      lastX = e.clientX;
+      lastY = e.clientY;
+      draw();
+      return;
+    }
+
+    const p = pointerXY(e);
+    const next = findHover(p.x, p.y);
+    const changed = JSON.stringify(next) !== JSON.stringify(hover);
+    hover = next;
+
+    if (hover) coordEl.textContent = `Posisi sah: x=${hover.x}, y=${hover.y}, z=${hover.z}`;
+    else coordEl.textContent = "";
+
+    if (changed) draw();
+  });
+
+  canvas.addEventListener("pointerup", e => {
+    dragging = false;
+    panning = false;
+    canvas.classList.remove("dragging");
+
+    if (!movedDuringDrag) {
+      const p = pointerXY(e);
+      const target = findHover(p.x, p.y);
+      if (target) place(target.x, target.y, target.z);
+    }
+  });
+
+  canvas.addEventListener("contextmenu", e => e.preventDefault());
+
+  canvas.addEventListener("wheel", e => {
+    e.preventDefault();
+    const factor = Math.exp(-e.deltaY * 0.0012);
+    zoom = Math.max(45, Math.min(180, zoom * factor));
+    draw();
+  }, { passive: false });
+
+  document.getElementById("newGame").addEventListener("click", newGame);
+  document.getElementById("resetView").addEventListener("click", () => {
+    yaw = -0.72;
+    pitch = -0.55;
+    zoom = 92;
+    panX = 0;
+    panY = 10;
+    draw();
+  });
+
+  function newGame() {
+    board = Array(N * N * N).fill(EMPTY);
+    current = 1;
+    gameOver = false;
+    winning = new Set();
+    hover = null;
+    coordEl.textContent = "";
+    updateStatus();
+    draw();
+  }
+
+  // Polyfill for older browsers.
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      this.moveTo(x + r, y);
+      this.arcTo(x + width, y, x + width, y + height, r);
+      this.arcTo(x + width, y + height, x, y + height, r);
+      this.arcTo(x, y + height, x, y, r);
+      this.arcTo(x, y, x + width, y, r);
+      return this;
+    };
+  }
+
+  window.addEventListener("resize", resize);
+
+  resize();
+  newGame();
+})();
+</script>
+</body>
+</html>
