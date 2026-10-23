@@ -20,7 +20,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: 'Body harus berupa objek JSON' }, { status: 400 })
   }
 
-  const data: Record<string, string | number> = {}
+  const data: { name?: string; difficulty?: string; status?: string; levelNumber?: number; targetScore?: number; timeLimitSec?: number; rewardPoints?: number } = {}
   if (body.name !== undefined) {
     if (typeof body.name !== 'string' || body.name.trim().length === 0 || body.name.trim().length > 120) {
       return NextResponse.json({ error: 'Nama level wajib diisi dan maksimal 120 karakter.' }, { status: 400 })
