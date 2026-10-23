@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import {
-  LogOut,
   Gamepad2,
   Home,
   LogOut,
