@@ -135,6 +135,7 @@ export function GameLibrary({ user, onOpenAuth, onPlayed }: Props) {
                 type="button"
                 className="eg-chip"
                 data-active={filter === chip.key ? 'true' : 'false'}
+                aria-pressed={filter === chip.key}
                 onClick={() => setFilter(chip.key)}
               >
                 {chip.label}
@@ -218,16 +219,18 @@ function GameCard({ game, onPlay }: { game: Game; onPlay: () => void }) {
 
         {/* Top badges */}
         <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 flex gap-1 sm:gap-2 z-10">
-          <Badge className="bg-black/55 text-white border border-white/10 hover:bg-black/55 shadow-sm text-[10px] sm:text-xs px-1.5 sm:px-2.5 py-0 sm:py-0.5">
+          <Badge className="bg-black/55 text-white border border-white/10 hover:bg-black/55 shadow-sm text-[9px] sm:text-xs px-1 sm:px-2.5 py-0 sm:py-0.5">
             {catLabel}
           </Badge>
           {!hasEmbed ? (
-            <Badge className="bg-orange-500/95 text-white border border-orange-400/50 shadow-sm text-[10px] sm:text-xs px-1.5 sm:px-2.5 py-0 sm:py-0.5">
-              Segera Hadir
+            <Badge className="bg-orange-500/95 text-white border border-orange-400/50 shadow-sm text-[9px] sm:text-xs px-1 sm:px-2.5 py-0 sm:py-0.5">
+              <span className="hidden sm:inline">Segera Hadir</span>
+              <span className="sm:hidden">Segera</span>
             </Badge>
           ) : (
-            <Badge className="bg-emerald-500/95 text-white border border-emerald-400/50 shadow-sm text-[10px] sm:text-xs px-1.5 sm:px-2.5 py-0 sm:py-0.5">
-              Bisa Dimainkan
+            <Badge className="bg-emerald-500/95 text-white border border-emerald-400/50 shadow-sm text-[9px] sm:text-xs px-1 sm:px-2.5 py-0 sm:py-0.5">
+              <span className="hidden sm:inline">Bisa Dimainkan</span>
+              <span className="sm:hidden">Siap</span>
             </Badge>
           )}
         </div>
@@ -244,7 +247,7 @@ function GameCard({ game, onPlay }: { game: Game; onPlay: () => void }) {
         </div>
 
         {/* gold chevron right (decorative) */}
-        <ChevronRight className="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 size-4 sm:size-5 text-yellow-400/80 drop-shadow" />
+        <ChevronRight className="absolute top-3 right-3 hidden size-5 text-yellow-400/80 drop-shadow sm:block" />
       </div>
 
       {/* Body — compact on mobile */}
@@ -265,13 +268,14 @@ function GameCard({ game, onPlay }: { game: Game; onPlay: () => void }) {
           </span>
         </div>
         {/* compact stats on mobile */}
-        <div className="sm:hidden flex items-center gap-2 text-[10px] text-gray-400">
-          <span className="inline-flex items-center gap-0.5">
-            <Layers className="size-2.5" />
-            {activeLevels.length}
+        <div className="sm:hidden flex items-center gap-2 text-[10px] text-gray-300">
+          <span className="inline-flex items-center gap-1">
+            <Layers className="size-3" />
+            {activeLevels.length} Level
           </span>
-          <span className="inline-flex items-center gap-0.5 text-yellow-400 font-bold">
-            +{totalReward}
+          <span className="inline-flex items-center gap-1 text-yellow-300 font-bold">
+            <Trophy className="size-3" />
+            +{totalReward} Poin
           </span>
         </div>
 
