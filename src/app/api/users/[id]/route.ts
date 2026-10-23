@@ -27,8 +27,18 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
     data.name = body.name.trim() || null
   }
-  if (body.role === 'ADMIN' || body.role === 'USER') data.role = body.role
-  if (body.status === 'ACTIVE' || body.status === 'SUSPENDED') data.status = body.status
+  if (body.role !== undefined) {
+    if (body.role !== 'ADMIN' && body.role !== 'USER') {
+      return NextResponse.json({ error: 'role tidak valid' }, { status: 400 })
+    }
+    data.role = body.role
+  }
+  if (body.status !== undefined) {
+    if (body.status !== 'ACTIVE' && body.status !== 'SUSPENDED') {
+      return NextResponse.json({ error: 'status tidak valid' }, { status: 400 })
+    }
+    data.status = body.status
+  }
   if (typeof body.email === 'string' && body.email.trim()) {
     const email = body.email.trim().toLowerCase()
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -54,6 +64,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const user = await db.user.findUnique({ where: { id } })
   if (!user) return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 })
+  if (data.email && data.email !== user.email) {
+    const emailOwner = await db.user.findUnique({ where: { email: data.email }, select: { id: true } })
+    if (emailOwner && emailOwner.id !== id) {
+      return NextResponse.json({ error: 'Email sudah digunakan akun lain.' }, { status: 409 })
+    }
+  }
   if (user.points + pointsDelta < 0 || user.points + pointsDelta > MAX_POINTS) {
     return NextResponse.json({ error: 'Perubahan poin akan membuat saldo di luar batas yang diizinkan.' }, { status: 400 })
   }
