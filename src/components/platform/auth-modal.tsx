@@ -77,8 +77,8 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     setRegError('')
-    if (regPassword.length < 6) {
-      setRegError('Kata sandi minimal 6 karakter')
+    if (regPassword.length < 12) {
+      setRegError('Kata sandi minimal 12 karakter')
       return
     }
     setRegLoading(true)
@@ -234,7 +234,7 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
                     id="reg-password"
                     type="password"
                     required
-                    placeholder="Minimal 6 karakter"
+                    placeholder="Minimal 12 karakter"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     autoComplete="new-password"
