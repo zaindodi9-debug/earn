@@ -221,7 +221,6 @@ export function GameLibrary({ user, onOpenAuth, onPlayed }: Props) {
 
 function GameCard({ game, onPlay }: { game: Game; onPlay: () => void }) {
   const activeLevels = (game.levels || []).filter((l) => l.status === 'ACTIVE')
-  const totalReward = activeLevels.reduce((sum, l) => sum + l.rewardPoints, 0)
   const hasEmbed = !!game.embedUrl
   const gradient = CATEGORY_GRADIENT[game.category] || CATEGORY_GRADIENT.arcade
   const icon = CATEGORY_ICON[game.category] || <Gamepad2 className="size-10" />
@@ -295,7 +294,7 @@ function GameCard({ game, onPlay }: { game: Game; onPlay: () => void }) {
       {/* Body — compact on mobile */}
       <div className="p-2 sm:p-4 space-y-1.5 sm:space-y-3">
         <p className="hidden sm:block text-xs text-gray-400 line-clamp-2 min-h-[2.5rem]">
-          {game.description || 'Game internal EarnGames. Mainkan dan kumpulkan poin.'}
+          {game.description || 'Game internal EarnGames. Bonus pendaftaran 100 poin tersedia; hadiah permainan sementara nonaktif.'}
         </p>
 
         {/* Stats row — gold for points */}
@@ -306,7 +305,7 @@ function GameCard({ game, onPlay }: { game: Game; onPlay: () => void }) {
           </span>
           <span className="inline-flex items-center gap-1 text-yellow-400 font-bold">
             <Trophy className="size-3.5" />
-            +{totalReward} Poin Maks
+            Hadiah nonaktif
           </span>
         </div>
         {/* compact stats on mobile */}
@@ -317,7 +316,7 @@ function GameCard({ game, onPlay }: { game: Game; onPlay: () => void }) {
           </span>
           <span className="inline-flex items-center gap-1 text-yellow-300 font-bold">
             <Trophy className="size-3" />
-            +{totalReward} Poin
+            Poin nonaktif
           </span>
         </div>
 
