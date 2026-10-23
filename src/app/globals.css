@@ -264,6 +264,7 @@
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 @media (min-width: 640px) {
   .eg-bottom-nav {
@@ -284,6 +285,7 @@
   justify-content: center;
   gap: 2px;
   flex: 1 1 0;
+  min-height: 58px;
   padding: 8px 0 10px;
   color: #6B7280;
   font-size: 11px;
@@ -341,4 +343,29 @@
   color: #0B0F19;
   border-color: transparent;
   box-shadow: 0 4px 12px rgba(255, 184, 0, 0.3);
+}
+
+
+/* Visible keyboard focus for custom interactive navigation and filters. */
+.eg-bottom-nav-item:focus-visible,
+.eg-chip:focus-visible {
+  outline: 2px solid #FBBF24;
+  outline-offset: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
