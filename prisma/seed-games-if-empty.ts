@@ -147,7 +147,7 @@ async function main() {
     }
 
     return { skipped: false, games: catalog.length }
-  })
+  }, { maxWait: 10_000, timeout: 60_000 })
 
   if (seeded.skipped) {
     console.log(`Katalog game tidak diubah: database sudah memiliki ${seeded.games} game.`)
