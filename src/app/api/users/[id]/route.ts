@@ -74,16 +74,29 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: 'Perubahan poin akan membuat saldo di luar batas yang diizinkan.' }, { status: 400 })
   }
 
-  const nextRole = data.role ?? user.role
-  const nextStatus = data.status ?? user.status
-  if (user.role === 'ADMIN' && user.status === 'ACTIVE' && (nextRole !== 'ADMIN' || nextStatus !== 'ACTIVE')) {
-    const activeAdmins = await db.user.count({ where: { role: 'ADMIN', status: 'ACTIVE' } })
-    if (activeAdmins <= 1) {
-      return NextResponse.json({ error: 'Akun ini adalah administrator aktif terakhir; promosikan admin lain sebelum menonaktifkannya.' }, { status: 400 })
-    }
-  }
+  const transactionResult = await db.$transaction(async (tx) => {
+    // Serialize administrator lifecycle changes so concurrent requests cannot remove every active admin.
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(2041950001::bigint)`
+    const currentTarget = await tx.user.findUnique({
+      where: { id },
+      select: { role: true, status: true, points: true },
+    })
+    if (!currentTarget) return 'missing' as const
 
-  await db.$transaction(async (tx) => {
+    const nextRole = data.role ?? currentTarget.role
+    const nextStatus = data.status ?? currentTarget.status
+    if (
+      currentTarget.role === 'ADMIN' &&
+      currentTarget.status === 'ACTIVE' &&
+      (nextRole !== 'ADMIN' || nextStatus !== 'ACTIVE')
+    ) {
+      const activeAdmins = await tx.user.count({ where: { role: 'ADMIN', status: 'ACTIVE' } })
+      if (activeAdmins <= 1) return 'last-admin' as const
+    }
+    if (currentTarget.points + pointsDelta < 0 || currentTarget.points + pointsDelta > MAX_POINTS) {
+      return 'points-limit' as const
+    }
+
     await tx.user.update({
       where: { id },
       data: { ...data, points: { increment: pointsDelta } },
@@ -102,7 +115,18 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         },
       })
     }
+    return 'ok' as const
   })
+
+  if (transactionResult === 'missing') {
+    return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 })
+  }
+  if (transactionResult === 'last-admin') {
+    return NextResponse.json({ error: 'Administrator aktif terakhir tidak dapat dinonaktifkan atau diturunkan perannya.' }, { status: 400 })
+  }
+  if (transactionResult === 'points-limit') {
+    return NextResponse.json({ error: 'Perubahan poin akan membuat saldo di luar batas yang diizinkan.' }, { status: 400 })
+  }
 
   const updated = await db.user.findUnique({
     where: { id },
@@ -131,15 +155,24 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   if (id === me.id) {
     return NextResponse.json({ error: 'Tidak bisa menghapus akun sendiri' }, { status: 400 })
   }
-  const target = await db.user.findUnique({ where: { id }, select: { role: true, status: true } })
-  if (!target) return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 })
-  if (target.role === 'ADMIN' && target.status === 'ACTIVE') {
-    const activeAdmins = await db.user.count({ where: { role: 'ADMIN', status: 'ACTIVE' } })
-    if (activeAdmins <= 1) {
-      return NextResponse.json({ error: 'Administrator aktif terakhir tidak dapat dihapus.' }, { status: 400 })
+  const deleteResult = await db.$transaction(async (tx) => {
+    // Use the same lock as PATCH to make the last-active-admin rule race-safe.
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(2041950001::bigint)`
+    const target = await tx.user.findUnique({ where: { id }, select: { role: true, status: true } })
+    if (!target) return 'missing' as const
+    if (target.role === 'ADMIN' && target.status === 'ACTIVE') {
+      const activeAdmins = await tx.user.count({ where: { role: 'ADMIN', status: 'ACTIVE' } })
+      if (activeAdmins <= 1) return 'last-admin' as const
     }
+    await tx.user.delete({ where: { id } })
+    return 'ok' as const
+  })
+  if (deleteResult === 'missing') {
+    return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 })
   }
-  await db.user.delete({ where: { id } })
+  if (deleteResult === 'last-admin') {
+    return NextResponse.json({ error: 'Administrator aktif terakhir tidak dapat dihapus.' }, { status: 400 })
+  }
   return NextResponse.json({ ok: true })
 }
 
