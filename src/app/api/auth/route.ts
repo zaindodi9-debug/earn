@@ -37,10 +37,10 @@ export async function POST(req: Request) {
   if (!email || !password) {
     return NextResponse.json({ error: 'Email dan kata sandi wajib diisi' }, { status: 400 })
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: 'Format email tidak valid' }, { status: 400 })
   }
-  if (password.length < 12) {
+  if (password.length < 12 || password.length > 128) {
     return NextResponse.json({ error: 'Kata sandi harus berisi 12 sampai 128 karakter' }, { status: 400 })
   }
   if (name.length > 120) {
@@ -136,7 +136,7 @@ export async function PUT(req: Request) {
   if (!email || !password) {
     return NextResponse.json({ error: 'Email dan kata sandi wajib diisi' }, { status: 400 })
   }
-  if (email.length > 254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: 'Format email tidak valid atau terlalu panjang' }, { status: 400 })
   }
   if (password.length > 128) {
