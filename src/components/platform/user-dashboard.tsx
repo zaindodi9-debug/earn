@@ -104,19 +104,19 @@ export function UserDashboard({ user, onOpenAuth, onPointsChange }: Props) {
             </div>
 
             <div className="flex gap-3">
-              <div id="wallet" className="eg-glass rounded-xl p-4 min-w-[140px] scroll-mt-20">
+              <div id="wallet" className="eg-glass rounded-xl p-3 sm:p-4 flex-1 min-w-0 scroll-mt-20">
                 <div className="flex items-center gap-2 text-yellow-300 text-xs mb-1">
                   <Target className="size-3" /> Total Poin
                 </div>
-                <div className="text-2xl md:text-3xl font-extrabold text-yellow-400">
+                <div className="text-xl sm:text-2xl md:text-3xl font-extrabold text-yellow-400">
                   🎯 {localPoints}
                 </div>
               </div>
-              <div className="eg-glass rounded-xl p-4 min-w-[140px]">
+              <div className="eg-glass rounded-xl p-3 sm:p-4 flex-1 min-w-0">
                 <div className="flex items-center gap-2 text-emerald-300 text-xs mb-1">
                   <CheckCircle2 className="size-3" /> Level Selesai
                 </div>
-                <div className="text-2xl md:text-3xl font-extrabold text-white">
+                <div className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white">
                   {completedCount}
                 </div>
               </div>
