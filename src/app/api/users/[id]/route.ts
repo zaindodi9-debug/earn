@@ -36,7 +36,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
     data.email = email
   }
-  if (typeof body.password === 'string' && body.password.length >= 6) {
+  if (typeof body.password === 'string' && body.password.length > 0) {
+    if (body.password.length < 12) {
+      return NextResponse.json({ error: 'Kata sandi minimal 12 karakter' }, { status: 400 })
+    }
     data.passwordHash = hashPassword(body.password)
   }
 
