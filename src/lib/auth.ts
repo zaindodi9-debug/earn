@@ -42,7 +42,9 @@ export function createToken(userId: string): string {
 }
 
 export function verifyToken(token: string): { uid: string; exp: number } | null {
-  const [body, sig] = token.split('.')
+  const parts = token.split('.')
+  if (parts.length !== 2) return null
+  const [body, sig] = parts
   if (!body || !sig) return null
   const expected = crypto.createHmac('sha256', SECRET).update(body).digest()
   try {
