@@ -32,11 +32,39 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: 'Body tidak valid' }, { status: 400 })
   }
-  const gameId = String(body.gameId || '')
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Body harus berupa objek JSON' }, { status: 400 })
+  }
+
+  const gameId = String(body.gameId || '').trim()
   const levelNumber = Number(body.levelNumber)
   const name = String(body.name || '').trim()
-  if (!gameId || !Number.isFinite(levelNumber) || levelNumber < 1) {
-    return NextResponse.json({ error: 'gameId dan levelNumber wajib diisi' }, { status: 400 })
+  const difficulty = body.difficulty === undefined ? 'EASY' : String(body.difficulty)
+  const status = body.status === undefined ? 'ACTIVE' : String(body.status)
+  const targetScore = body.targetScore === undefined ? 100 : Number(body.targetScore)
+  const timeLimitSec = body.timeLimitSec === undefined ? 60 : Number(body.timeLimitSec)
+  const rewardPoints = body.rewardPoints === undefined ? 10 : Number(body.rewardPoints)
+
+  if (!gameId || !Number.isInteger(levelNumber) || levelNumber < 1) {
+    return NextResponse.json({ error: 'gameId dan levelNumber harus valid; nomor level wajib bilangan bulat positif.' }, { status: 400 })
+  }
+  if (!Number.isInteger(targetScore) || targetScore < 1) {
+    return NextResponse.json({ error: 'targetScore harus bilangan bulat minimal 1.' }, { status: 400 })
+  }
+  if (!Number.isInteger(timeLimitSec) || timeLimitSec < 1) {
+    return NextResponse.json({ error: 'timeLimitSec harus bilangan bulat minimal 1.' }, { status: 400 })
+  }
+  if (!Number.isInteger(rewardPoints) || rewardPoints < 0) {
+    return NextResponse.json({ error: 'rewardPoints harus bilangan bulat nonnegatif.' }, { status: 400 })
+  }
+  if (!['EASY', 'MEDIUM', 'HARD', 'EXPERT'].includes(difficulty)) {
+    return NextResponse.json({ error: 'difficulty tidak valid.' }, { status: 400 })
+  }
+  if (!['ACTIVE', 'LOCKED'].includes(status)) {
+    return NextResponse.json({ error: 'status level tidak valid.' }, { status: 400 })
+  }
+  if (name.length > 120) {
+    return NextResponse.json({ error: 'Nama level maksimal 120 karakter.' }, { status: 400 })
   }
 
   const game = await db.game.findUnique({ where: { id: gameId } })
@@ -52,11 +80,11 @@ export async function POST(req: Request) {
       gameId,
       levelNumber,
       name: name || `${game.title} Level ${levelNumber}`,
-      difficulty: String(body.difficulty || 'EASY'),
-      targetScore: Number(body.targetScore) || 100,
-      timeLimitSec: Number(body.timeLimitSec) || 60,
-      rewardPoints: Number(body.rewardPoints) || 10,
-      status: String(body.status || 'ACTIVE'),
+      difficulty,
+      targetScore,
+      timeLimitSec,
+      rewardPoints,
+      status,
     },
   })
   return NextResponse.json({ level }, { status: 201 })
