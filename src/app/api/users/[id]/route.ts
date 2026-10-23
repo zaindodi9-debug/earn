@@ -52,7 +52,20 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
   })
 
-  const updated = await db.user.findUnique({ where: { id } })
+  const updated = await db.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      status: true,
+      points: true,
+      avatarUrl: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  })
   return NextResponse.json({ user: updated })
 }
 
