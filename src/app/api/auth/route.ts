@@ -136,6 +136,9 @@ export async function PUT(req: Request) {
   if (!email || !password) {
     return NextResponse.json({ error: 'Email dan kata sandi wajib diisi' }, { status: 400 })
   }
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    return NextResponse.json({ error: 'Format email tidak valid' }, { status: 400 })
+  }
 
   const ip = getClientIp(req)
   const ipLimit = await consumeAuthAttempt('login-ip', ip, 20, 15 * 60 * 1000, 15 * 60 * 1000)
