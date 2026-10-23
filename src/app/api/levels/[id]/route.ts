@@ -16,12 +16,43 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: 'Body tidak valid' }, { status: 400 })
   }
 
-  const data: any = {}
-  for (const k of ['name', 'difficulty', 'status']) {
-    if (body[k] !== undefined) data[k] = String(body[k])
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Body harus berupa objek JSON' }, { status: 400 })
   }
-  for (const k of ['levelNumber', 'targetScore', 'timeLimitSec', 'rewardPoints']) {
-    if (body[k] !== undefined) data[k] = Number(body[k]) || 0
+
+  const data: Record<string, string | number> = {}
+  if (body.name !== undefined) {
+    if (typeof body.name !== 'string' || body.name.trim().length === 0 || body.name.trim().length > 120) {
+      return NextResponse.json({ error: 'Nama level wajib diisi dan maksimal 120 karakter.' }, { status: 400 })
+    }
+    data.name = body.name.trim()
+  }
+  if (body.difficulty !== undefined) {
+    if (!['EASY', 'MEDIUM', 'HARD', 'EXPERT'].includes(body.difficulty)) {
+      return NextResponse.json({ error: 'difficulty tidak valid.' }, { status: 400 })
+    }
+    data.difficulty = body.difficulty
+  }
+  if (body.status !== undefined) {
+    if (!['ACTIVE', 'LOCKED'].includes(body.status)) {
+      return NextResponse.json({ error: 'status level tidak valid.' }, { status: 400 })
+    }
+    data.status = body.status
+  }
+
+  const numericRules: Record<string, { min: number; label: string }> = {
+    levelNumber: { min: 1, label: 'levelNumber' },
+    targetScore: { min: 1, label: 'targetScore' },
+    timeLimitSec: { min: 1, label: 'timeLimitSec' },
+    rewardPoints: { min: 0, label: 'rewardPoints' },
+  }
+  for (const [key, rule] of Object.entries(numericRules)) {
+    if (body[key] === undefined) continue
+    const value = Number(body[key])
+    if (!Number.isInteger(value) || value < rule.min) {
+      return NextResponse.json({ error: `${rule.label} harus bilangan bulat minimal ${rule.min}.` }, { status: 400 })
+    }
+    data[key] = value
   }
 
   if (data.levelNumber !== undefined) {
