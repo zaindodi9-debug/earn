@@ -182,11 +182,6 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
                   </>
                 )}
               </Button>
-              <p className="text-xs text-gray-400 text-center">
-                Coba akun demo:{' '}
-                <span className="font-mono text-yellow-300">pemain@earngames.web.id</span>{' '}
-                / <span className="font-mono text-yellow-300">demo123</span>
-              </p>
             </form>
           </TabsContent>
 
