@@ -24,6 +24,9 @@ export async function POST(req: Request) {
   if (!email || !password) {
     return NextResponse.json({ error: 'Email dan kata sandi wajib diisi' }, { status: 400 })
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: 'Format email tidak valid' }, { status: 400 })
+  }
   if (password.length < 6) {
     return NextResponse.json({ error: 'Kata sandi minimal 6 karakter' }, { status: 400 })
   }
@@ -33,24 +36,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 409 })
   }
 
-  const user = await db.user.create({
-    data: {
-      email,
-      name: name || null,
-      passwordHash: hashPassword(password),
-      role: 'USER',
-      status: 'ACTIVE',
-      points: 100, // signup bonus
-    },
-  })
+  const user = await db.$transaction(async (tx) => {
+    const created = await tx.user.create({
+      data: {
+        email,
+        name: name || null,
+        passwordHash: hashPassword(password),
+        role: 'USER',
+        status: 'ACTIVE',
+        points: 100, // signup bonus
+      },
+    })
 
-  await db.pointsLedger.create({
-    data: {
-      userId: user.id,
-      amount: 100,
-      reason: 'SIGNUP_BONUS',
-      reference: 'signup',
-    },
+    await tx.pointsLedger.create({
+      data: {
+        userId: created.id,
+        amount: 100,
+        reason: 'SIGNUP_BONUS',
+        reference: 'signup',
+      },
+    })
+
+    return created
   })
 
   const token = await createSession(user.id)
