@@ -52,7 +52,7 @@ const CATEGORY_GRADIENT: Record<string, string> = {
 // Category chips (filter) — order matters
 const FILTER_CHIPS: { key: string; label: string }[] = [
   { key: 'all', label: 'Semua' },
-  { key: 'populer', label: 'Populer' },
+  { key: 'bisa-dimainkan', label: 'Bisa Dimainkan' },
   { key: 'arcade', label: 'Arcade' },
   { key: 'puzzle', label: 'Puzzle' },
   { key: 'card', label: 'Kartu' },
@@ -104,12 +104,7 @@ export function GameLibrary({ user, onOpenAuth, onPlayed }: Props) {
 
   const filteredGames = useMemo(() => {
     if (filter === 'all') return games
-    if (filter === 'populer') {
-      // simple heuristic: games with embedUrl come first (already playable)
-      return [...games].sort(
-        (a, b) => Number(!!b.embedUrl) - Number(!!a.embedUrl)
-      )
-    }
+    if (filter === 'bisa-dimainkan') return games.filter((g) => !!g.embedUrl)
     return games.filter((g) => g.category === filter)
   }, [games, filter])
 
