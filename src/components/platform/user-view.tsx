@@ -136,7 +136,7 @@ export function UserView({ user, onOpenAuth, onPlayed }: Props) {
       {/* ===== Hero ===== */}
       <section
         id="beranda"
-        className="relative isolate flex min-h-[720px] items-center overflow-hidden bg-[#07111b] pt-20 pb-14 md:min-h-[640px] md:pt-24 md:pb-20 mt-14 scroll-mt-14"
+        className="relative isolate flex min-h-[min(740px,100svh)] items-center overflow-hidden bg-[#07111b] pt-24 pb-12 sm:pt-28 sm:pb-16 md:min-h-[640px] md:pt-24 md:pb-20 scroll-mt-14"
       >
         <div className="absolute inset-0 -z-10" aria-hidden="true">
           <img
@@ -186,7 +186,7 @@ export function UserView({ user, onOpenAuth, onPlayed }: Props) {
                     <div className="text-lg md:text-2xl font-extrabold text-white">
                       {s.value}
                     </div>
-                    <div className="text-gray-400 text-[10px] md:text-xs">{s.label}</div>
+                    <div className="text-gray-300 text-[11px] md:text-xs">{s.label}</div>
                   </div>
                 ))}
               </div>
