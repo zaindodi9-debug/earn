@@ -6,8 +6,14 @@ import { getUserFromRequest } from '@/lib/auth'
 export async function GET(req: Request) {
   const url = new URL(req.url)
   const gameId = url.searchParams.get('gameId') || undefined
+  const me = await getUserFromRequest(req)
+  const isAdmin = me?.role === 'ADMIN'
+  const where = {
+    ...(gameId ? { gameId } : {}),
+    ...(!isAdmin ? { status: 'ACTIVE', game: { status: 'ACTIVE' } } : {}),
+  }
   const levels = await db.gameLevel.findMany({
-    where: gameId ? { gameId } : {},
+    where,
     include: { game: true },
     orderBy: [{ gameId: 'asc' }, { levelNumber: 'asc' }],
   })
