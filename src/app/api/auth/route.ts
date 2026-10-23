@@ -58,6 +58,7 @@ export async function POST(req: Request) {
   res.cookies.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
     path: '/',
     maxAge: SESSION_MAX_AGE,
   })
@@ -82,7 +83,13 @@ export async function DELETE(req: Request) {
     } catch {}
   }
   const res = NextResponse.json({ ok: true })
-  res.cookies.set(SESSION_COOKIE_NAME, '', { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 0 })
+  res.cookies.set(SESSION_COOKIE_NAME, '', {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 0,
+  })
   return res
 }
 
@@ -113,6 +120,7 @@ export async function PUT(req: Request) {
   res.cookies.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
     path: '/',
     maxAge: SESSION_MAX_AGE,
   })

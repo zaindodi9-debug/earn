@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build && node -e \"const fs = require('node:fs'); fs.cpSync('.next/static', '.next/standalone/.next/static', { recursive: true }); fs.cpSync('public', '.next/standalone/public', { recursive: true });\"",
-    "start": "bun .next/standalone/server.js",
+    "build": "prisma generate && next build",
+    "start": "next start -p 3000",
     "lint": "eslint .",
-    "db:push": "prisma db push --accept-data-loss",
+    "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:transfer:sqlite": "bun run prisma/migrate-sqlite-to-postgres.ts",
+    "db:seed": "bun run prisma/seed.ts",
     "db:reset": "prisma migrate reset"
   },
   "dependencies": {

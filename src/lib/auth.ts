@@ -3,7 +3,11 @@ import crypto from 'crypto'
 
 const SESSION_COOKIE = 'np_session'
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7 // 7 days
-const SECRET = process.env.SESSION_SECRET || 'earngames-dev-secret-change-in-production'
+const configuredSecret = process.env.SESSION_SECRET
+if (process.env.NODE_ENV === 'production' && (!configuredSecret || configuredSecret.length < 32)) {
+  throw new Error('SESSION_SECRET must be set to at least 32 characters in production')
+}
+const SECRET = configuredSecret || 'earngames-dev-secret-change-in-production'
 
 /* ---------------- password hashing (scrypt) ---------------- */
 
