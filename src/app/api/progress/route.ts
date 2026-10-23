@@ -33,6 +33,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Body tidak valid' }, { status: 400 })
   }
 
+  // SECURITY: scores currently originate from the client (including iframe postMessage
+  // and demo/manual input). A browser-controlled score is not proof of gameplay.
+  // Fail closed until a server-verifiable game result/signature is implemented.
+  return NextResponse.json(
+    { error: 'Pengiriman skor dan hadiah poin sementara dinonaktifkan sampai hasil permainan dapat diverifikasi oleh server.' },
+    { status: 503 }
+  )
+
   const gameLevelId = String(body.gameLevelId || '')
   const score = Math.max(0, Number(body.score) || 0)
   const timeSec = Number.isFinite(Number(body.timeSec)) ? Number(body.timeSec) : null
