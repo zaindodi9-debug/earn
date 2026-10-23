@@ -26,7 +26,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -147,6 +146,10 @@ export function GamePlayer({
       const score = Math.max(0, Math.floor(Number(d.score)))
       if (!Number.isFinite(score)) return
       const timeSec = Number.isFinite(Number(d.timeSec)) ? Number(d.timeSec) : undefined
+      if (!POINT_REWARDS_ENABLED) {
+        toast.info(`Skor permainan terdeteksi (${score}), tetapi hadiah poin dinonaktifkan sementara sampai verifikasi server tersedia.`)
+        return
+      }
       toast.success(`Skor diterima: ${score}`)
       submitRef.current(score, timeSec)
     }
