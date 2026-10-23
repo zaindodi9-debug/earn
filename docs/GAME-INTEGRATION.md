@@ -31,10 +31,10 @@ function kirimSkorKeEarnGames(score, timeSec) {
   if (window.parent && window.parent !== window) {
     window.parent.postMessage({
       type: 'EARNGAMES_GAME_RESULT',
-      game: 'slug-game-kamu',     // opsional, untuk identifikasi
+      game: 'slug-game-kamu',     // wajib: isi dengan slug persis dari katalog
       score: score,
       timeSec: timeSec            // opsional, durasi main dalam detik
-    }, '*');
+    }, 'https://www.earngames.web.id');
     console.log('[EarnGames] Skor terkirim:', score);
   }
 }
@@ -65,9 +65,9 @@ function onGameOver() {
 
 ## Keamanan
 
-- Platform **hanya menerima pesan** dari origin yang diizinkan: `https://earngames.web.id`, `http://localhost:3000` (dev), dan same-origin.
+- Penerima mencocokkan `e.origin` dengan origin URL embed yang dikonfigurasi dan memastikan `e.source` adalah iframe game yang sedang aktif.
 - Penerima memeriksa origin dan sumber iframe yang diharapkan. Ini membantu mencegah pesan dari jendela lain, tetapi **bukan anti-cheat** dan tidak membuktikan nilai skor benar.
-- `'*'` hanya digunakan pada contoh kompatibilitas; di produksi, utamakan `targetOrigin` yang spesifik jika URL game diketahui.
+- Saat game mengirim pesan ke halaman induk, gunakan `targetOrigin` spesifik `https://www.earngames.web.id` (atau `http://localhost:3000` untuk pengembangan), bukan `'*'` di produksi.
 
 ## Status saat ini
 
