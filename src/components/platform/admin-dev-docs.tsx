@@ -24,7 +24,7 @@ const SNIPPET = `function kirimSkorKeEarnGames(score, timeSec) {
       game: 'slug-game-kamu',
       score: score,
       timeSec: timeSec
-    }, '*');
+    }, 'https://www.earngames.web.id');
   }
 }`
 
@@ -93,18 +93,17 @@ export function AdminDevDocs() {
                 <li><code className="bg-muted px-1 rounded">type</code> (wajib): harus persis <code className="bg-muted px-1 rounded">"EARNGAMES_GAME_RESULT"</code></li>
                 <li><code className="bg-muted px-1 rounded">score</code> (wajib): skor akhir, angka bulat ≥ 0</li>
                 <li><code className="bg-muted px-1 rounded">timeSec</code> (opsional): durasi main dalam detik</li>
-                <li><code className="bg-muted px-1 rounded">game</code> (opsional): slug game untuk debugging</li>
+                <li><code className="bg-muted px-1 rounded">game</code> (wajib): slug harus sama persis dengan katalog game yang sedang dimainkan</li>
               </ul>
             </section>
 
             <section>
               <h3 className="font-semibold text-gray-900 mb-1">Keamanan</h3>
               <p>
-                Platform hanya menerima pesan dari origin yang diizinkan:{' '}
-                <code className="bg-muted px-1 rounded">https://earngames.web.id</code>,{' '}
-                <code className="bg-muted px-1 rounded">http://localhost:3000</code> (dev), dan
-                same-origin. Pesan dari origin lain ditolak diam-diam. Gunakan{' '}
-                <code className="bg-muted px-1 rounded">'*'</code> sebagai targetOrigin di game kamu.
+                Penerima mencocokkan origin dengan URL embed yang dikonfigurasi dan memastikan pesan berasal dari iframe game aktif. Saat mengirim pesan ke halaman induk, gunakan targetOrigin spesifik{' '}
+                <code className="bg-muted px-1 rounded">https://www.earngames.web.id</code> (atau{' '}
+                <code className="bg-muted px-1 rounded">http://localhost:3000</code> saat pengembangan); jangan gunakan{' '}
+                <code className="bg-muted px-1 rounded">'*'</code> di produksi.
               </p>
             </section>
 
