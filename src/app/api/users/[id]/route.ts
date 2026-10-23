@@ -88,6 +88,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       where: { id },
       data: { ...data, points: { increment: pointsDelta } },
     })
+    // A password reset must invalidate all existing sessions for the target account.
+    if (data.passwordHash) {
+      await tx.session.deleteMany({ where: { userId: id } })
+    }
     if (pointsDelta !== 0) {
       await tx.pointsLedger.create({
         data: {
