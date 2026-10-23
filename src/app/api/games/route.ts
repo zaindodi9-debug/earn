@@ -3,6 +3,19 @@ import { db } from '@/lib/db'
 import { getUserFromRequest } from '@/lib/auth'
 import { resolveGameEmbedUrl } from '@/lib/game-embeds'
 
+const GAME_CATEGORIES = ['arcade', 'puzzle', 'card', 'sports', 'strategy'] as const
+const GAME_STATUSES = ['DRAFT', 'ACTIVE', 'HIDDEN'] as const
+
+function isSafeResourceUrl(value: string): boolean {
+  if (value.startsWith('/')) return !value.startsWith('//') && !value.includes('\\')
+  try {
+    const parsed = new URL(value)
+    return parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 function slugify(s: string): string {
   return s
     .toLowerCase()
@@ -47,10 +60,45 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: 'Body tidak valid' }, { status: 400 })
   }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Body harus berupa objek JSON' }, { status: 400 })
+  }
+
   const title = String(body.title || '').trim()
-  if (!title) return NextResponse.json({ error: 'Judul wajib diisi' }, { status: 400 })
+  if (!title || title.length > 120) {
+    return NextResponse.json({ error: 'Judul wajib diisi dan maksimal 120 karakter.' }, { status: 400 })
+  }
 
   const slug = String(body.slug || '').trim() || slugify(title)
+  if (slug.length > 60 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    return NextResponse.json({ error: 'Slug hanya boleh berisi huruf kecil, angka, dan tanda hubung.' }, { status: 400 })
+  }
+  const category = String(body.category || 'arcade')
+  const status = String(body.status || 'DRAFT')
+  const description = body.description === undefined || body.description === null ? null : String(body.description).trim()
+  const thumbnailUrl = body.thumbnailUrl === undefined || body.thumbnailUrl === null ? null : String(body.thumbnailUrl).trim()
+  const embedUrl = body.embedUrl === undefined || body.embedUrl === null ? null : String(body.embedUrl).trim()
+  const sortOrder = body.sortOrder === undefined ? 0 : Number(body.sortOrder)
+
+  if (!(GAME_CATEGORIES as readonly string[]).includes(category)) {
+    return NextResponse.json({ error: 'Kategori game tidak valid.' }, { status: 400 })
+  }
+  if (!(GAME_STATUSES as readonly string[]).includes(status)) {
+    return NextResponse.json({ error: 'Status game tidak valid.' }, { status: 400 })
+  }
+  if (description && description.length > 2000) {
+    return NextResponse.json({ error: 'Deskripsi maksimal 2000 karakter.' }, { status: 400 })
+  }
+  if (thumbnailUrl && (thumbnailUrl.length > 2048 || !isSafeResourceUrl(thumbnailUrl))) {
+    return NextResponse.json({ error: 'URL thumbnail harus berupa path lokal atau URL HTTPS.' }, { status: 400 })
+  }
+  if (embedUrl && (embedUrl.length > 2048 || !isSafeResourceUrl(embedUrl))) {
+    return NextResponse.json({ error: 'URL embed harus berupa path lokal atau URL HTTPS.' }, { status: 400 })
+  }
+  if (!Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 100000) {
+    return NextResponse.json({ error: 'Urutan harus bilangan bulat antara 0 dan 100000.' }, { status: 400 })
+  }
+
   const existing = await db.game.findUnique({ where: { slug } })
   if (existing) return NextResponse.json({ error: 'Slug sudah dipakai' }, { status: 409 })
 
@@ -58,12 +106,12 @@ export async function POST(req: Request) {
     data: {
       title,
       slug,
-      description: String(body.description || '').trim() || null,
-      category: String(body.category || 'arcade'),
-      thumbnailUrl: String(body.thumbnailUrl || '').trim() || null,
-      embedUrl: String(body.embedUrl || '').trim() || null,
-      status: String(body.status || 'DRAFT'),
-      sortOrder: Number.isFinite(Number(body.sortOrder)) ? Number(body.sortOrder) : 0,
+      description,
+      category,
+      thumbnailUrl: thumbnailUrl || null,
+      embedUrl: embedUrl || null,
+      status,
+      sortOrder,
     },
     include: { levels: true },
   })
