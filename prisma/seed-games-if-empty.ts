@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { hashPassword } from '@/lib/auth'
+import { hashPassword, verifyPassword } from '@/lib/auth'
 import { resolveGameEmbedUrl } from '@/lib/game-embeds'
 
 const catalog = [
@@ -143,23 +143,39 @@ async function main() {
     if (initialAdminPassword.length < 16) {
       throw new Error('INITIAL_ADMIN_PASSWORD harus minimal 16 karakter.')
     }
-    await db.user.upsert({
-      where: { email: initialAdminEmail },
-      update: {
-        passwordHash: hashPassword(initialAdminPassword),
-        role: 'ADMIN',
-        status: 'ACTIVE',
-      },
-      create: {
-        email: initialAdminEmail,
-        name: 'Administrator',
-        passwordHash: hashPassword(initialAdminPassword),
-        role: 'ADMIN',
-        status: 'ACTIVE',
-        points: 0,
-      },
-    })
-    console.log(`Akun administrator awal telah dipastikan tersedia: ${initialAdminEmail}`)
+    const existingAdmin = await db.user.findUnique({ where: { email: initialAdminEmail } })
+    if (!existingAdmin) {
+      await db.user.create({
+        data: {
+          email: initialAdminEmail,
+          name: 'Administrator',
+          passwordHash: hashPassword(initialAdminPassword),
+          role: 'ADMIN',
+          status: 'ACTIVE',
+          points: 0,
+        },
+      })
+      console.log(`Akun administrator awal dibuat: ${initialAdminEmail}`)
+    } else if (
+      existingAdmin.role !== 'ADMIN' ||
+      existingAdmin.status !== 'ACTIVE' ||
+      !verifyPassword(initialAdminPassword, existingAdmin.passwordHash)
+    ) {
+      await db.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: existingAdmin.id },
+          data: {
+            passwordHash: hashPassword(initialAdminPassword),
+            role: 'ADMIN',
+            status: 'ACTIVE',
+          },
+        })
+        await tx.session.deleteMany({ where: { userId: existingAdmin.id } })
+      })
+      console.log(`Kredensial administrator dirotasi dan sesi lama dicabut: ${initialAdminEmail}`)
+    } else {
+      console.log(`Akun administrator awal sudah sesuai: ${initialAdminEmail}`)
+    }
   } else {
     console.log('Bootstrap admin dilewati: INITIAL_ADMIN_EMAIL/PASSWORD belum disetel.')
   }
