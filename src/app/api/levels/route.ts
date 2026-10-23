@@ -45,17 +45,21 @@ export async function POST(req: Request) {
   const timeLimitSec = body.timeLimitSec === undefined ? 60 : Number(body.timeLimitSec)
   const rewardPoints = body.rewardPoints === undefined ? 10 : Number(body.rewardPoints)
 
-  if (!gameId || !Number.isInteger(levelNumber) || levelNumber < 1) {
-    return NextResponse.json({ error: 'gameId dan levelNumber harus valid; nomor level wajib bilangan bulat positif.' }, { status: 400 })
+  const MAX_DB_INT = 2_147_483_647
+  const MAX_LEVEL_NUMBER = 100_000
+  const MAX_TIME_LIMIT_SEC = 86_400
+
+  if (!gameId || !Number.isInteger(levelNumber) || levelNumber < 1 || levelNumber > MAX_LEVEL_NUMBER) {
+    return NextResponse.json({ error: 'gameId wajib diisi dan levelNumber harus bilangan bulat antara 1 dan 100000.' }, { status: 400 })
   }
-  if (!Number.isInteger(targetScore) || targetScore < 1) {
-    return NextResponse.json({ error: 'targetScore harus bilangan bulat minimal 1.' }, { status: 400 })
+  if (!Number.isInteger(targetScore) || targetScore < 1 || targetScore > MAX_DB_INT) {
+    return NextResponse.json({ error: 'targetScore harus bilangan bulat antara 1 dan 2147483647.' }, { status: 400 })
   }
-  if (!Number.isInteger(timeLimitSec) || timeLimitSec < 1) {
-    return NextResponse.json({ error: 'timeLimitSec harus bilangan bulat minimal 1.' }, { status: 400 })
+  if (!Number.isInteger(timeLimitSec) || timeLimitSec < 1 || timeLimitSec > MAX_TIME_LIMIT_SEC) {
+    return NextResponse.json({ error: 'timeLimitSec harus bilangan bulat antara 1 dan 86400 detik.' }, { status: 400 })
   }
-  if (!Number.isInteger(rewardPoints) || rewardPoints < 0) {
-    return NextResponse.json({ error: 'rewardPoints harus bilangan bulat nonnegatif.' }, { status: 400 })
+  if (!Number.isInteger(rewardPoints) || rewardPoints < 0 || rewardPoints > MAX_DB_INT) {
+    return NextResponse.json({ error: 'rewardPoints harus bilangan bulat antara 0 dan 2147483647.' }, { status: 400 })
   }
   if (!['EASY', 'MEDIUM', 'HARD', 'EXPERT'].includes(difficulty)) {
     return NextResponse.json({ error: 'difficulty tidak valid.' }, { status: 400 })
