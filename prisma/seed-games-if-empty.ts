@@ -165,10 +165,7 @@ async function main() {
   }
 
   const seeded = await db.$transaction(async (tx) => {
-    const existingCount = await tx.game.count()
-    if (existingCount > 0) {
-      return { skipped: true, games: existingCount }
-    }
+    // Reconcile every catalog entry so partially populated databases are completed safely.
 
     for (const item of catalog) {
       const game = await tx.game.upsert({
@@ -203,11 +200,7 @@ async function main() {
     return { skipped: false, games: catalog.length }
   }, { maxWait: 10_000, timeout: 60_000 })
 
-  if (seeded.skipped) {
-    console.log(`Katalog game tidak diubah: database sudah memiliki ${seeded.games} game.`)
-  } else {
-    console.log(`Katalog awal berhasil dibuat: ${seeded.games} game dengan ${seeded.games * levels.length} level aktif.`)
-  }
+  console.log(`Sinkronisasi katalog selesai: ${seeded.games} definisi game diperiksa; game dan level yang sudah ada dipertahankan, entri yang hilang ditambahkan.`)
 }
 
 main()
