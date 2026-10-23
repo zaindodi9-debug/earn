@@ -417,7 +417,7 @@ export function GamePlayer({
             )}
           </DialogTitle>
           <DialogDescription>
-            {game.description || 'Mainkan game internal EarnGames dan kumpulkan poin.'}
+            {game.description || 'Mainkan game internal EarnGames. Hadiah poin dari permainan sementara dinonaktifkan sampai verifikasi server tersedia.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -456,8 +456,8 @@ export function GamePlayer({
           <InfoTile
             icon={<Award className="size-4" />}
             label="Hadiah Poin"
-            value={`+${level.rewardPoints}`}
-            badgeClass="bg-green-100 text-green-700 border-green-200"
+            value={POINT_REWARDS_ENABLED ? `+${level.rewardPoints}` : 'Nonaktif sementara'}
+            badgeClass={POINT_REWARDS_ENABLED ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-700 border-gray-200'}
           />
           <InfoTile
             icon={<Clock className="size-4" />}
