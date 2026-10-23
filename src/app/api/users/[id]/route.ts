@@ -41,8 +41,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
   if (typeof body.email === 'string' && body.email.trim()) {
     const email = body.email.trim().toLowerCase()
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: 'Format email tidak valid atau terlalu panjang' }, { status: 400 })
+    if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: 'Format email tidak valid atau terlalu panjang atau terlalu panjang' }, { status: 400 })
     }
     data.email = email
   }
