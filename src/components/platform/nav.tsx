@@ -152,15 +152,17 @@ export function Nav({ user, view, onOpenAuth, onLogout, onSwitchView }: Props) {
                 {user.role === 'ADMIN' && (
                   <Button
                     size="sm"
+                    title={view === 'admin' ? 'Kembali ke halaman pengguna' : 'Buka panel admin'}
+                    aria-label={view === 'admin' ? 'Kembali ke halaman pengguna' : 'Buka panel admin'}
                     onClick={() => onSwitchView(view === 'admin' ? 'user' : 'admin')}
-                    className={`h-8 px-3 text-xs font-semibold rounded-full ${
+                    className={`h-8 px-2.5 sm:px-3 text-xs font-semibold rounded-full ${
                       view === 'admin'
                         ? 'eg-gradient-bg text-black'
                         : 'bg-white/5 text-yellow-300 border border-yellow-400/30 hover:bg-white/10'
                     }`}
                   >
                     <ShieldCheck className="size-3.5" />
-                    {view === 'admin' ? 'Halaman User' : 'Admin'}
+                    <span className="hidden sm:inline">{view === 'admin' ? 'Halaman User' : 'Admin'}</span>
                   </Button>
                 )}
 
