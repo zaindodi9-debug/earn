@@ -35,9 +35,9 @@ type Props = {
 }
 
 const STATS = [
-  { value: '50K+', label: 'Pemain Aktif', icon: <Users className="size-5" /> },
-  { value: '30+', label: 'Level Tersedia', icon: <ListOrdered className="size-5" /> },
-  { value: '100K+', label: 'Poin Dibagikan', icon: <Gift className="size-5" /> },
+  { value: 'HTML5', label: 'Game Interaktif', icon: <Users className="size-5" /> },
+  { value: 'Bertingkat', label: 'Tantangan Game', icon: <ListOrdered className="size-5" /> },
+  { value: '100 Poin', label: 'Bonus Pendaftaran', icon: <Gift className="size-5" /> },
 ]
 
 const STEPS = [
@@ -55,8 +55,8 @@ const STEPS = [
   },
   {
     n: 3,
-    title: 'Main & Kumpulkan Poin',
-    desc: 'Selesaikan target skor setiap level untuk mendapatkan hadiah poin. Poin diberikan sekali per level.',
+    title: 'Mainkan Game',
+    desc: 'Permainan dapat dimainkan. Hadiah poin dari hasil game sementara dinonaktifkan sampai verifikasi server tersedia.',
     icon: <Trophy className="size-6" />,
   },
 ]
@@ -69,7 +69,7 @@ const FEATURES = [
   },
   {
     title: 'Sistem Poin',
-    desc: 'Poin diberikan jujur saat kamu menyelesaikan level. Tidak ada manipulasi hasil, tidak ada trik.',
+    desc: 'Bonus pendaftaran 100 poin tersedia. Hadiah poin dari hasil game sementara dinonaktifkan sampai verifikasi server tersedia.',
     icon: <Target className="size-6" />,
   },
   {
@@ -79,7 +79,7 @@ const FEATURES = [
   },
   {
     title: 'Papan Peringkat',
-    desc: 'Bandingkan total poinmu dengan pemain lain di papan peringkat admin dan dashboard.',
+    desc: 'Lihat poin dan progres akunmu melalui dashboard. Papan peringkat publik belum tersedia.',
     icon: <Trophy className="size-6" />,
   },
 ]
@@ -87,7 +87,7 @@ const FEATURES = [
 const TIPS = [
   {
     title: 'Mulai dari Level Mudah',
-    desc: 'Selesaikan level EASY dulu untuk membangun ritme dan mengumpulkan poin awal.',
+    desc: 'Mulai dari level EASY untuk mengenal kontrol dan membangun keterampilan bermain.',
   },
   {
     title: 'Latihan Rutin',
@@ -95,7 +95,7 @@ const TIPS = [
   },
   {
     title: 'Pahami Target Skor',
-    desc: 'Poin hadiah hanya diberikan saat skor kamu mencapai target — perhatikan angkanya sebelum main.',
+    desc: 'Gunakan target skor sebagai ukuran progres. Hadiah poin permainan belum diaktifkan.',
   },
   {
     title: 'Kelola Waktu',
@@ -114,7 +114,7 @@ const FAQS = [
   },
   {
     q: 'Bagaimana cara mendapatkan poin?',
-    a: 'Poin didapat dengan menyelesaikan level game. Setiap kali skor kamu mencapai target pada sebuah level (untuk pertama kalinya), kamu mendapat hadiah poin sesuai level tersebut.',
+    a: 'Saat ini hadiah poin dari permainan dinonaktifkan sampai hasil dapat diverifikasi oleh server. Bonus pendaftaran 100 poin tetap tersedia.',
   },
   {
     q: 'Apakah poin bisa ditukar dengan hadiah?',
@@ -126,7 +126,7 @@ const FAQS = [
   },
   {
     q: 'Apakah poin bisa di-hook/dicurangi?',
-    a: 'Tidak. Sistem poin bersifat jujur dan transparan — hadiah hanya diberikan sekali per level saat target tercapai, dan tidak ada manipulasi tingkat kemenangan.',
+    a: 'Skor yang dikirim dari browser belum digunakan untuk mengubah poin. Hadiah permainan baru diaktifkan setelah verifikasi server tersedia.',
   },
 ]
 
@@ -158,9 +158,9 @@ export function UserView({ user, onOpenAuth, onPlayed }: Props) {
                 <span className="eg-gold-text">Poin Hadiah</span> Menarik
               </h1>
               <p className="text-sm md:text-base text-gray-300 mb-7 max-w-lg">
-                EarnGames adalah platform game internal dengan sistem poin yang jujur
-                dan transparan. Pilih game, selesaikan level, kumpulkan poin, dan naiki
-                papan peringkat.
+                EarnGames adalah platform game internal. Pilih dan mainkan game yang tersedia.
+                Bonus pendaftaran 100 poin tersedia; hadiah poin dari permainan sementara
+                dinonaktifkan sampai hasil dapat diverifikasi oleh server.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
@@ -205,10 +205,10 @@ export function UserView({ user, onOpenAuth, onPlayed }: Props) {
               Cara Main
             </Badge>
             <h2 className="text-2xl md:text-4xl font-extrabold text-white mb-3">
-              Tiga Langkah Mudah Mendapat Poin
+              Tiga Langkah untuk Memulai Bermain
             </h2>
             <p className="text-gray-400">
-              Tidak ada trik, tidak ada syarat tersembunyi. Cukup daftar, main, dan kumpulkan poin.
+              Daftar gratis dan jelajahi game yang tersedia. Hadiah poin permainan akan diaktifkan setelah verifikasi server selesai.
             </p>
           </div>
 
@@ -338,8 +338,8 @@ export function UserView({ user, onOpenAuth, onPlayed }: Props) {
           <Star className="size-12 mx-auto mb-4 text-yellow-400" />
           <h2 className="text-2xl md:text-4xl font-extrabold mb-3">Siap Mulai Bermain?</h2>
           <p className="text-base text-gray-300 mb-7 max-w-2xl mx-auto">
-            Daftar sekarang dan dapatkan bonus 100 poin pertama. Mainkan game internal
-            kami, selesaikan level, dan kumpulkan poin.
+            Daftar sekarang dan dapatkan bonus 100 poin pertama. Jelajahi game internal kami.
+            Hadiah poin permainan sementara dinonaktifkan hingga verifikasi server tersedia.
           </p>
           {!user ? (
             <Button
