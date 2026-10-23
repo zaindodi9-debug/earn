@@ -6,14 +6,15 @@ type RateLimitResult = {
   retryAfterSeconds?: number
 }
 
-/** Prefer proxy-populated client IP headers; do not persist raw IPs or email addresses. */
+/** Use platform-populated IP headers; do not trust a client-supplied x-forwarded-for chain. */
 export function getClientIp(req: Request): string {
-  const trusted = req.headers.get('x-real-ip') || req.headers.get('x-vercel-forwarded-for')
-  if (trusted?.trim()) return trusted.split(',')[0].trim()
+  const vercelForwarded = req.headers.get('x-vercel-forwarded-for')
+  if (vercelForwarded?.trim()) return vercelForwarded.split(',').at(-1)!.trim()
 
-  const forwarded = req.headers.get('x-forwarded-for')
-  if (forwarded?.trim()) return forwarded.split(',')[0].trim()
+  const realIp = req.headers.get('x-real-ip')
+  if (realIp?.trim()) return realIp.trim()
 
+  // Do not fall back to x-forwarded-for: clients can sometimes inject its first entry.
   return 'unknown'
 }
 
