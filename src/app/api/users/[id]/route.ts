@@ -79,7 +79,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params
   const user = await db.user.findUnique({
     where: { id },
-    include: {
+    // Explicitly select public/admin-safe fields. Never serialize passwordHash.
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      status: true,
+      points: true,
+      avatarUrl: true,
+      createdAt: true,
+      updatedAt: true,
       progress: {
         include: { gameLevel: { include: { game: true } } },
         orderBy: { updatedAt: 'desc' },
