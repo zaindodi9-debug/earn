@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Bell,
+  LogOut,
   Gamepad2,
   Home,
   LogOut,
@@ -29,7 +29,7 @@ type BottomTab = {
 const BOTTOM_TABS: BottomTab[] = [
   { key: 'home', label: 'Beranda', icon: Home, anchor: '#beranda' },
   { key: 'games', label: 'Game', icon: Gamepad2, anchor: '#games' },
-  { key: 'leaderboard', label: 'Peringkat', icon: Trophy, anchor: '#how' },
+  { key: 'leaderboard', label: 'Cara Main', icon: Trophy, anchor: '#how' },
   { key: 'wallet', label: 'Dompet', icon: Wallet, action: 'wallet' },
   { key: 'profile', label: 'Profil', icon: UserIcon, action: 'profile' },
 ]
@@ -47,9 +47,32 @@ export function Nav({ user, view, onOpenAuth, onLogout, onSwitchView }: Props) {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
+    const tabForSection: Record<string, string> = {
+      beranda: 'home',
+      games: 'games',
+      how: 'leaderboard',
+      tips: 'leaderboard',
+      faq: 'leaderboard',
+      wallet: 'wallet',
+      profile: 'profile',
+    }
+
     function onScroll() {
       setScrolled(window.scrollY > 8)
+
+      const sections = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '#beranda, #games, #how, #tips, #faq, #profile, #wallet'
+        )
+      )
+      const visibleSections = sections.filter(
+        (section) => section.getBoundingClientRect().top <= 150
+      )
+      const currentSection = visibleSections[visibleSections.length - 1]
+      const nextTab = currentSection ? tabForSection[currentSection.id] : 'home'
+      if (nextTab) setActiveTab((current) => current === nextTab ? current : nextTab)
     }
+
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -57,28 +80,40 @@ export function Nav({ user, view, onOpenAuth, onLogout, onSwitchView }: Props) {
 
   function handleTabClick(tab: BottomTab) {
     setActiveTab(tab.key)
+
     if (tab.anchor) {
-      // smooth scroll to anchor
       const el = document.querySelector(tab.anchor)
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
       }
-      return
+      // If this anchor is not part of the current view, continue to the action fallback.
     }
+
     if (!user) {
       onOpenAuth()
       return
     }
-    // user is logged in
+
     if (tab.action === 'admin' && user.role === 'ADMIN') {
       onSwitchView(view === 'admin' ? 'user' : 'admin')
-    } else if (tab.action === 'profile') {
-      if (view === 'admin') onSwitchView('user')
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    } else if (tab.action === 'wallet') {
-      if (view === 'admin') onSwitchView('user')
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
     }
+
+    if (view === 'admin' && (tab.action === 'profile' || tab.action === 'wallet')) {
+      onSwitchView('user')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+
+    const targetId = tab.action === 'wallet' ? 'wallet' : tab.action === 'profile' ? 'profile' : ''
+    const target = targetId ? document.getElementById(targetId) : null
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
@@ -92,7 +127,7 @@ export function Nav({ user, view, onOpenAuth, onLogout, onSwitchView }: Props) {
         }`}
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <a href="#beranda" aria-label="EarnGames beranda" className="flex items-center">
+          <a href="#beranda" aria-label="EarnGames beranda" className="flex items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0F19]">
             <Logo />
           </a>
 
@@ -124,13 +159,12 @@ export function Nav({ user, view, onOpenAuth, onLogout, onSwitchView }: Props) {
                 {/* Notification bell with red dot */}
                 <button
                   type="button"
-                  aria-label="Notifikasi"
+                  aria-label="Keluar"
                   className="relative w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-300 hover:text-yellow-300 transition-colors"
                   onClick={() => onLogout()}
-                  title="Klik untuk keluar"
+                  title="Keluar dari akun"
                 >
-                  <Bell className="size-4" />
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-[#0B0F19]" />
+                  <LogOut className="size-4" />
                 </button>
               </>
             ) : (
