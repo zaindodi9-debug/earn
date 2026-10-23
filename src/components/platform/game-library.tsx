@@ -11,6 +11,7 @@ import {
   MapPin,
   PlayCircle,
   Puzzle,
+  RefreshCw,
   Sparkles,
   Trophy,
 } from 'lucide-react'
@@ -70,13 +71,18 @@ export function GameLibrary({ user, onOpenAuth, onPlayed }: Props) {
   const [loading, setLoading] = useState(true)
   const [playerGame, setPlayerGame] = useState<Game | null>(null)
   const [filter, setFilter] = useState<string>('all')
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   async function loadGames() {
     setLoading(true)
     try {
       const { games } = await getGames()
-      setGames(games)
-    } catch {
+      setGames(Array.isArray(games) ? games : [])
+      setLoadError(null)
+    } catch (error) {
+      console.error('Game catalog failed to load:', error)
+      setGames([])
+      setLoadError('Daftar game gagal dimuat dari server. Periksa koneksi lalu coba lagi.')
       toast.error('Gagal memuat daftar game. Coba lagi nanti.')
     } finally {
       setLoading(false)
@@ -153,9 +159,50 @@ export function GameLibrary({ user, onOpenAuth, onPlayed }: Props) {
               />
             ))}
           </div>
+        ) : loadError ? (
+          <div role="alert" className="rounded-2xl border border-red-400/20 bg-red-400/5 px-5 py-10 text-center">
+            <Gamepad2 className="size-10 mx-auto mb-3 text-red-300" />
+            <h3 className="text-base font-bold text-white mb-2">Game belum bisa dimuat</h3>
+            <p className="text-sm text-gray-300 max-w-md mx-auto mb-4">{loadError}</p>
+            <Button
+              type="button"
+              onClick={loadGames}
+              disabled={loading}
+              className="eg-gradient-bg text-black font-bold"
+            >
+              <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
+              Coba Lagi
+            </Button>
+          </div>
+        ) : games.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-12 text-center">
+            <Gamepad2 className="size-10 mx-auto mb-3 text-yellow-300" />
+            <h3 className="text-base font-bold text-white mb-2">Katalog game belum tersedia</h3>
+            <p className="text-sm text-gray-400 max-w-md mx-auto">
+              Server belum mengembalikan game aktif. Katalog awal akan disiapkan otomatis saat database game masih kosong. Jika pesan ini tetap muncul, periksa status game di panel admin.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={loadGames}
+              disabled={loading}
+              className="mt-4 border-white/15 bg-white/5 text-white hover:bg-white/10"
+            >
+              <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
+              Muat Ulang
+            </Button>
+          </div>
         ) : filteredGames.length === 0 ? (
-          <div className="text-center py-16 text-gray-500">
-            Tidak ada game untuk kategori ini.
+          <div className="text-center py-12 text-gray-400">
+            <p className="mb-3">Tidak ada game untuk kategori ini.</p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setFilter('all')}
+              className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+            >
+              Tampilkan Semua Game
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-5">
