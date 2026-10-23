@@ -163,10 +163,9 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: 'Akun dinonaktifkan. Hubungi administrator.' }, { status: 403 })
   }
 
-  await Promise.all([
-    clearAuthAttempts('login-ip', ip),
-    clearAuthAttempts('login-email', email),
-  ])
+  // Clear the account-specific counter after a successful login, but retain the IP counter
+  // so a successful login to one account cannot reset brute-force limits for other accounts.
+  await clearAuthAttempts('login-email', email)
   const token = await createSession(user.id)
   const res = NextResponse.json({ user: toSafeUser(user) })
   res.cookies.set(SESSION_COOKIE_NAME, token, {
