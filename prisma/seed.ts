@@ -3,33 +3,39 @@ import { hashPassword } from '@/lib/auth'
 import { resolveGameEmbedUrl } from '@/lib/game-embeds'
 
 async function main() {
-  // Admin user
-  const admin = await db.user.upsert({
-    where: { email: 'admin@earngames.web.id' },
-    update: {},
-    create: {
-      email: 'admin@earngames.web.id',
-      name: 'Administrator',
-      passwordHash: hashPassword('admin123'),
-      role: 'ADMIN',
-      status: 'ACTIVE',
-      points: 0,
-    },
-  })
-
-  // Sample regular user
-  const demoUser = await db.user.upsert({
-    where: { email: 'pemain@earngames.web.id' },
-    update: {},
-    create: {
-      email: 'pemain@earngames.web.id',
-      name: 'Pemain Demo',
-      passwordHash: hashPassword('demo123'),
-      role: 'USER',
-      status: 'ACTIVE',
-      points: 120,
-    },
-  })
+  // Administrator bootstrap requires credentials supplied outside the repository.
+  const initialAdminEmail = (process.env.INITIAL_ADMIN_EMAIL || '').trim().toLowerCase()
+  const initialAdminPassword = process.env.INITIAL_ADMIN_PASSWORD || ''
+  if (initialAdminEmail || initialAdminPassword) {
+    if (!initialAdminEmail || !initialAdminPassword) {
+      throw new Error('INITIAL_ADMIN_EMAIL dan INITIAL_ADMIN_PASSWORD harus diisi bersama.')
+    }
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(initialAdminEmail)) {
+      throw new Error('INITIAL_ADMIN_EMAIL tidak memiliki format email yang valid.')
+    }
+    if (initialAdminPassword.length < 16) {
+      throw new Error('INITIAL_ADMIN_PASSWORD harus minimal 16 karakter.')
+    }
+    await db.user.upsert({
+      where: { email: initialAdminEmail },
+      update: {
+        passwordHash: hashPassword(initialAdminPassword),
+        role: 'ADMIN',
+        status: 'ACTIVE',
+      },
+      create: {
+        email: initialAdminEmail,
+        name: 'Administrator',
+        passwordHash: hashPassword(initialAdminPassword),
+        role: 'ADMIN',
+        status: 'ACTIVE',
+        points: 0,
+      },
+    })
+    console.log(`Akun administrator awal disiapkan: ${initialAdminEmail}`)
+  } else {
+    console.log('Bootstrap administrator dilewati. Set INITIAL_ADMIN_EMAIL dan INITIAL_ADMIN_PASSWORD jika diperlukan.')
+  }
 
   // Games catalog — SUNSET RUSH (real, playable) + several gamezop-style casual games (demo, awaiting embedUrl)
   const games = [
@@ -188,26 +194,7 @@ async function main() {
     }
   }
 
-  // Signup bonus ledger for demo user (only if not exists)
-  const existingBonus = await db.pointsLedger.findFirst({
-    where: { userId: demoUser.id, reason: 'SIGNUP_BONUS' },
-  })
-  if (!existingBonus) {
-    await db.pointsLedger.create({
-      data: {
-        userId: demoUser.id,
-        amount: 120,
-        reason: 'SIGNUP_BONUS',
-        reference: 'seed',
-      },
-    })
-  }
-
-  console.log('Seed selesai:')
-  console.log('  Admin login  : admin@earngames.web.id / admin123')
-  console.log('  User login   : pemain@earngames.web.id / demo123')
-  console.log('  Games        : 11 game (termasuk Grand City Auto)')
-  console.log('  Levels       : 33 level (3 per game)')
+  console.log('Seed selesai: katalog game dan level telah disinkronkan.')
 }
 
 main()
