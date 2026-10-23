@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Bubble Pop · EarnGames</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{height:100%;overflow:hidden;font-family:'Nunito',system-ui,sans-serif}
+  body{
+    background:radial-gradient(ellipse at 30% 20%, #2bd6ff 0%, #4f8bff 40%, #6b5cff 75%, #4a2fb8 100%);
+    color:#fff;position:relative;
+  }
+  #stage{position:fixed;inset:0;overflow:hidden}
+  #play{position:absolute;inset:0;overflow:hidden}
+
+  /* floating ambient bubbles in background */
+  .bg-bubble{position:absolute;border-radius:50%;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), rgba(255,255,255,0) 60%);border:1px solid rgba(255,255,255,.12);pointer-events:none;animation:rise linear infinite}
+  @keyframes rise{from{transform:translateY(110vh) scale(.8);opacity:0}10%{opacity:.7}90%{opacity:.7}to{transform:translateY(-20vh) scale(1.1);opacity:0}}
+
+  /* HUD */
+  #hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:14px 18px;z-index:5;pointer-events:none}
+  .hud-card{
+    background:rgba(15,20,55,.42);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.18);border-radius:18px;padding:8px 14px;
+    font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;letter-spacing:.3px;
+    box-shadow:0 6px 20px rgba(0,0,0,.18);min-width:80px;text-align:center;
+  }
+  .hud-card .label{display:block;font-size:10px;font-weight:600;opacity:.7;letter-spacing:1.2px;text-transform:uppercase}
+  #lives{font-size:22px;letter-spacing:2px}
+  .heart{display:inline-block;transition:transform .25s,opacity .25s}
+  .heart.lost{opacity:.22;transform:scale(.7)}
+  #time.warning{color:#ffd23f;animation:pulse .8s infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+  /* Bubbles */
+  .bubble{
+    position:absolute;border-radius:50%;cursor:pointer;
+    background:radial-gradient(circle at 30% 28%, var(--bhi), var(--blo) 70%);
+    box-shadow:inset -4px -8px 14px rgba(0,0,0,.18), inset 6px 8px 14px rgba(255,255,255,.45), 0 6px 16px rgba(0,0,0,.18);
+    border:1px solid rgba(255,255,255,.4);
+    transition:transform .15s;
+    will-change:transform,opacity;
+  }
+  .bubble::before{
+    content:'';position:absolute;top:14%;left:22%;width:32%;height:24%;border-radius:50%;
+    background:radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.85), rgba(255,255,255,0) 70%);
+  }
+  .bubble:active{transform:scale(.94)}
+  .bubble.pop{animation:pop .32s cubic-bezier(.4,1.5,.5,1) forwards;pointer-events:none}
+  @keyframes pop{0%{transform:scale(1);opacity:1}40%{transform:scale(1.55);opacity:.85}100%{transform:scale(0);opacity:0}}
+
+  .particle{position:absolute;width:10px;height:10px;border-radius:50%;pointer-events:none;animation:burst .55s ease-out forwards}
+  @keyframes burst{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+
+  /* Overlays */
+  .overlay{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:24px;z-index:20;
+    background:radial-gradient(ellipse at 50% 40%, rgba(40,30,100,.55), rgba(10,5,40,.85));
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    transition:opacity .35s, transform .35s;
+  }
+  .overlay.hide{opacity:0;transform:scale(1.05);pointer-events:none}
+  .title{
+    font-family:'Baloo 2',sans-serif;font-weight:800;font-size:clamp(40px,11vw,72px);line-height:1;
+    background:linear-gradient(180deg,#fff,#9be7ff);-webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 8px 30px rgba(0,180,255,.4);letter-spacing:1px;
+  }
+  .subtitle{margin-top:8px;font-size:clamp(13px,3.6vw,16px);opacity:.85;max-width:340px;line-height:1.5;font-weight:600}
+  .btn{
+    margin-top:28px;cursor:pointer;border:none;outline:none;
+    font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;letter-spacing:.5px;
+    padding:16px 46px;border-radius:50px;color:#1a1140;
+    background:linear-gradient(180deg,#ffe680,#ffb84d);
+    box-shadow:0 10px 28px rgba(255,170,40,.5), inset 0 -4px 0 rgba(180,90,0,.25);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .btn:active{transform:translateY(3px) scale(.98);box-shadow:0 5px 14px rgba(255,170,40,.4), inset 0 -2px 0 rgba(180,90,0,.25)}
+  .score-block{margin-top:18px}
+  .score-block .lab{font-size:13px;letter-spacing:2px;opacity:.7;text-transform:uppercase;font-weight:600}
+  .score-block .val{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:64px;line-height:1;margin-top:4px;
+    background:linear-gradient(180deg,#fff,#ffd23f);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .badge{margin-top:10px;font-size:14px;font-weight:600;padding:6px 16px;border-radius:30px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
+
+  @media (max-width:480px){
+    .hud-card{font-size:16px;padding:7px 11px;min-width:70px}
+    .hud-card .label{font-size:9px}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="play"></div>
+
+  <div id="hud" style="display:none">
+    <div class="hud-card"><span class="label">Skor</span><span id="score">0</span></div>
+    <div class="hud-card" id="time"><span class="label">Waktu</span><span id="timeV">30</span></div>
+    <div class="hud-card" id="lives"><span class="label">Nyawa</span><div id="hearts"><span class="heart">❤️</span><span class="heart">❤️</span><span class="heart">❤️</span></div></div>
+  </div>
+
+  <!-- Start screen -->
+  <div class="overlay" id="startScreen">
+    <div class="title">Bubble Pop</div>
+    <div class="subtitle">Ketuk gelembung sebelum naik ke atas! Jangan sampai ada yang lolos — 3 kali lolos = game over.</div>
+    <button class="btn" id="startBtn">Main</button>
+    <div class="badge">⏱️ 30 detik · 🫧 +10 / gelembung</div>
+  </div>
+
+  <!-- Game over screen -->
+  <div class="overlay hide" id="overScreen">
+    <div class="title" id="overTitle">Selesai!</div>
+    <div class="score-block">
+      <div class="lab">Skor Akhir</div>
+      <div class="val" id="finalScore">0</div>
+    </div>
+    <div class="badge" id="overDetail">0 gelembung pecah</div>
+    <button class="btn" id="againBtn">Main Lagi</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const SLUG='bubble-pop';
+  const play=document.getElementById('play');
+  const hud=document.getElementById('hud');
+  const scoreEl=document.getElementById('score');
+  const timeEl=document.getElementById('timeV');
+  const timeCard=document.getElementById('time');
+  const heartsWrap=document.getElementById('hearts');
+  const startScreen=document.getElementById('startScreen');
+  const overScreen=document.getElementById('overScreen');
+  const overTitle=document.getElementById('overTitle');
+  const overDetail=document.getElementById('overDetail');
+  const finalScoreEl=document.getElementById('finalScore');
+  const startBtn=document.getElementById('startBtn');
+  const againBtn=document.getElementById('againBtn');
+
+  const PASTELS=[
+    {hi:'#ffe0f0',lo:'#ff7ab8'}, // pink
+    {hi:'#d4ffea',lo:'#3fd28b'}, // green
+    {hi:'#ffe8c4',lo:'#ffa53b'}, // orange
+    {hi:'#d6e4ff',lo:'#5b8cff'}, // blue
+    {hi:'#ecd4ff',lo:'#a66bff'}, // purple
+    {hi:'#fff4c4',lo:'#ffd23f'}, // yellow
+    {hi:'#c4f3ff',lo:'#22c5e8'}, // cyan
+    {hi:'#ffd6d6',lo:'#ff5b6b'}  // red
+  ];
+
+  // ambient bg bubbles
+  for(let i=0;i<14;i++){
+    const b=document.createElement('div');
+    b.className='bg-bubble';
+    const s=20+Math.random()*60;
+    b.style.width=s+'px';b.style.height=s+'px';
+    b.style.left=(Math.random()*100)+'vw';
+    b.style.animationDuration=(10+Math.random()*16)+'s';
+    b.style.animationDelay=(-Math.random()*20)+'s';
+    play.appendChild(b);
+  }
+
+  // Web Audio beep
+  let actx=null;
+  function ensureAudio(){
+    if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(_){}}
+    if(actx&&actx.state==='suspended')actx.resume();
+  }
+  function popSound(){
+    if(!actx)return;
+    try{
+      const o=actx.createOscillator(),g=actx.createGain();
+      o.type='sine';o.frequency.setValueAtTime(720,actx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(220,actx.currentTime+.18);
+      g.gain.setValueAtTime(.18,actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.2);
+      o.connect(g);g.connect(actx.destination);
+      o.start();o.stop(actx.currentTime+.22);
+    }catch(_){}
+  }
+  function missSound(){
+    if(!actx)return;
+    try{
+      const o=actx.createOscillator(),g=actx.createGain();
+      o.type='square';o.frequency.setValueAtTime(180,actx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(80,actx.currentTime+.25);
+      g.gain.setValueAtTime(.12,actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.27);
+      o.connect(g);g.connect(actx.destination);
+      o.start();o.stop(actx.currentTime+.28);
+    }catch(_){}
+  }
+
+  let state='idle';
+  let score=0,popped=0,lives=3,timeLeft=30;
+  let bubbles=[];
+  let lastSpawn=0,spawnInterval=900;
+  let startT=0,lastT=0,rafId=0;
+
+  function reset(){
+    score=0;popped=0;lives=3;timeLeft=30;
+    bubbles.forEach(b=>b.el.remove());
+    bubbles=[];
+    lastSpawn=0;spawnInterval=900;
+    scoreEl.textContent='0';
+    timeEl.textContent='30';
+    timeCard.classList.remove('warning');
+    [...heartsWrap.children].forEach(h=>h.classList.remove('lost'));
+  }
+
+  function startGame(){
+    ensureAudio();
+    reset();
+    state='playing';
+    startScreen.classList.add('hide');
+    overScreen.classList.add('hide');
+    hud.style.display='flex';
+    startT=performance.now();lastT=startT;
+    cancelAnimationFrame(rafId);
+    rafId=requestAnimationFrame(loop);
+  }
+
+  function spawnBubble(){
+    const size=30+Math.random()*30;
+    const c=PASTELS[(Math.random()*PASTELS.length)|0];
+    const el=document.createElement('div');
+    el.className='bubble';
+    el.style.width=size+'px';el.style.height=size+'px';
+    el.style.setProperty('--bhi',c.hi);
+    el.style.setProperty('--blo',c.lo);
+    const x=Math.random()*(window.innerWidth-size);
+    el.style.left=x+'px';
+    el.style.top=(window.innerHeight+size)+'px';
+    const speed=(60+Math.random()*80)+popped*1.2; // px/sec, faster as score climbs
+    play.appendChild(el);
+    const b={el,x,y:window.innerHeight+size,size,speed,popped:false};
+    el.addEventListener('click',()=>pop(b),{passive:true});
+    el.addEventListener('touchstart',e=>{e.preventDefault();pop(b);},{passive:false});
+    bubbles.push(b);
+  }
+
+  function pop(b){
+    if(b.popped||state!=='playing')return;
+    b.popped=true;
+    b.el.classList.add('pop');
+    score+=10;popped++;
+    scoreEl.textContent=score;
+    popSound();
+    spawnParticles(b);
+    setTimeout(()=>{if(b.el.parentNode)b.el.remove();},340);
+  }
+
+  function spawnParticles(b){
+    const cx=b.x+b.size/2,cy=b.y+b.size/2;
+    const n=8;
+    const cols=['#fff','#ffe680','#9be7ff','#ffb84d'];
+    for(let i=0;i<n;i++){
+      const p=document.createElement('div');
+      p.className='particle';
+      const sz=6+Math.random()*8;
+      p.style.width=sz+'px';p.style.height=sz+'px';
+      p.style.left=(cx-sz/2)+'px';p.style.top=(cy-sz/2)+'px';
+      p.style.background=cols[(Math.random()*cols.length)|0];
+      const ang=(Math.PI*2*i)/n+Math.random()*.4;
+      const dist=40+Math.random()*40;
+      p.style.setProperty('--dx',Math.cos(ang)*dist+'px');
+      p.style.setProperty('--dy',Math.sin(ang)*dist+'px');
+      play.appendChild(p);
+      setTimeout(()=>p.remove(),600);
+    }
+  }
+
+  function loseLife(){
+    lives--;
+    missSound();
+    const hs=[...heartsWrap.children];
+    hs[hs.length-1-lives]?.classList.add('lost');
+    // brief red flash
+    const f=document.createElement('div');
+    f.style.cssText='position:absolute;inset:0;background:rgba(255,40,60,.25);pointer-events:none;z-index:4;animation:fade .4s ease-out forwards';
+    if(!document.getElementById('flashKF')){
+      const st=document.createElement('style');
+      st.id='flashKF';st.textContent='@keyframes fade{from{opacity:1}to{opacity:0}}';
+      document.head.appendChild(st);
+    }
+    play.appendChild(f);
+    setTimeout(()=>f.remove(),420);
+    if(lives<=0){endGame(true);}
+  }
+
+  function loop(now){
+    if(state!=='playing')return;
+    const dt=Math.min(50,now-lastT);
+    lastT=now;
+    // time
+    timeLeft=Math.max(0,30-(now-startT)/1000);
+    timeEl.textContent=Math.ceil(timeLeft);
+    if(timeLeft<=10)timeCard.classList.add('warning');
+    // spawn
+    lastSpawn+=dt;
+    // ramp difficulty: spawn faster over time
+    const elapsed=(now-startT)/1000;
+    spawnInterval=Math.max(380,900-elapsed*18);
+    if(lastSpawn>=spawnInterval){lastSpawn=0;spawnBubble();}
+    // update bubbles
+    for(let i=bubbles.length-1;i>=0;i--){
+      const b=bubbles[i];
+      if(b.popped){if(b.y<-b.size)bubbles.splice(i,1);continue;}
+      b.y-=b.speed*dt/1000;
+      b.el.style.transform=`translateY(${b.y-window.innerHeight-b.size}px)`;
+      b.el.style.top=(window.innerHeight+b.size)+'px'; // ensure base is bottom; using transform for perf
+      // simpler: move via top
+      b.el.style.top=b.y+'px';
+      b.el.style.transform='none';
+      if(b.y+b.size<-10){
+        // missed
+        b.el.remove();
+        bubbles.splice(i,1);
+        loseLife();
+        if(state!=='playing')return;
+      }
+    }
+    if(timeLeft<=0){endGame(false);return;}
+    rafId=requestAnimationFrame(loop);
+  }
+
+  function endGame(byLives){
+    state='over';
+    cancelAnimationFrame(rafId);
+    hud.style.display='none';
+    // clean remaining bubbles
+    bubbles.forEach(b=>b.el.remove());
+    bubbles=[];
+    overTitle.textContent=byLives?'Kalah!':'Selesai!';
+    finalScoreEl.textContent=score;
+    overDetail.textContent=popped+' gelembung pecah · '+(byLives?'3 gelembung lolos':'waktu habis');
+    overScreen.classList.remove('hide');
+    const timeSec=Math.round((performance.now()-startT)/1000);
+    reportScore(score,timeSec);
+  }
+
+  function reportScore(score,timeSec){
+    try{if(window.parent&&window.parent!==window){
+      window.parent.postMessage({type:'EARNGAMES_GAME_RESULT',game:SLUG,score:Math.max(0,Math.floor(score)),timeSec:Math.max(0,Math.floor(timeSec))},'*');
+    }}catch(_){}
+  }
+
+  startBtn.addEventListener('click',startGame);
+  againBtn.addEventListener('click',startGame);
+
+  // pause when tab hidden (don't cheat time)
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden&&state==='playing'){
+      cancelAnimationFrame(rafId);
+      const pausedAt=performance.now();
+      const resume=()=>{
+        if(state!=='playing')return;
+        const gap=performance.now()-pausedAt;
+        startT+=gap;lastT=performance.now();
+        rafId=requestAnimationFrame(loop);
+        document.removeEventListener('visibilitychange',resume);
+      };
+      document.addEventListener('visibilitychange',resume);
+    }
+  });
+})();
+</script>
+</body>
+</html>

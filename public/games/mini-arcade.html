@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#0b0f19">
+  <title>EarnGames Mini Game</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b0f19;--panel:#151b28;--line:#30394d;--gold:#ffd23f;--text:#f4f5f7;--muted:#a5afc2;--green:#42d392;--red:#ff6b6b}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#182238,var(--bg) 65%);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;justify-content:center;user-select:none}
+    button{font:inherit;color:inherit;cursor:pointer}
+    .app{width:min(100%,1000px);min-height:100vh;padding:clamp(12px,3vw,28px);display:flex;flex-direction:column;gap:16px}
+    header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;border:1px solid var(--line);border-radius:18px;background:#101725}
+    h1{font-size:clamp(20px,4vw,30px);margin:0}.eyebrow{color:var(--gold);font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+    .stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:7px 11px;color:var(--muted);font-size:13px}.stat strong{color:var(--gold);font-size:16px;margin-left:5px}
+    main{flex:1;min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+    .panel{width:100%;background:#101725;border:1px solid var(--line);border-radius:18px;padding:clamp(12px,3vw,24px);box-shadow:0 16px 48px #0005}
+    .help{color:var(--muted);text-align:center;margin:0}.actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+    .btn{border:1px solid var(--line);border-radius:12px;background:#202b3d;padding:10px 16px;font-weight:700;transition:transform .12s,filter .12s}
+    .btn:hover{filter:brightness(1.15)}.btn:active{transform:scale(.97)}.btn.primary{background:linear-gradient(135deg,#ffe27a,var(--gold));color:#221a03;border:0}.btn:disabled{opacity:.4;cursor:not-allowed}
+    .board{width:100%;max-width:760px;margin:auto;min-height:280px;display:flex;align-items:center;justify-content:center;position:relative}
+    canvas{display:block;width:100%;height:min(55vh,440px);min-height:260px;border-radius:14px;background:#0b1220;border:1px solid #29344a;touch-action:none}
+    .result{position:fixed;inset:0;z-index:5;background:#05080dcc;display:flex;align-items:center;justify-content:center;padding:20px}
+    .result[hidden]{display:none}.result-card{width:min(100%,420px);text-align:center;background:#151d2b;border:1px solid var(--line);border-radius:22px;padding:28px}
+    .result-card h2{font-size:30px;margin:0 0 8px;color:var(--gold)}.result-card p{color:var(--muted)}
+    .target-board{position:relative;width:100%;max-width:760px}.target-board canvas{cursor:crosshair}
+    .tiles{display:grid;grid-template-columns:repeat(3,minmax(72px,112px));gap:8px}
+    .tile{aspect-ratio:1;border:1px solid #46536b;border-radius:14px;background:linear-gradient(145deg,#28364d,#192334);font-size:clamp(25px,6vw,42px);font-weight:900;color:white;box-shadow:0 5px 0 #0b111b}
+    .tile.empty{visibility:hidden}
+    .cards-layout{width:100%;display:grid;gap:10px;overflow-x:auto}
+    .card-row{display:flex;gap:7px;justify-content:center;min-height:88px}
+    .playing-card{min-width:48px;width:clamp(48px,7vw,66px);height:82px;border-radius:9px;background:#f8fafc;color:#142033;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;box-shadow:0 4px 8px #0005}
+    .playing-card.red{color:#d52d45}.playing-card.back{background:repeating-linear-gradient(45deg,#1c3760,#1c3760 5px,#274978 5px,#274978 10px);border-color:#8ba6cd;color:transparent}
+    .playing-card.selected{outline:3px solid var(--gold);transform:translateY(-4px)}
+    .pile{min-width:48px;min-height:72px;border:1px dashed #506078;border-radius:9px;padding:3px;display:flex;flex-direction:column;align-items:center;gap:3px}
+    .solitaire-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .ludo-track{display:grid;grid-template-columns:repeat(8,minmax(28px,54px));gap:5px;max-width:480px}
+    .track-cell{aspect-ratio:1;border-radius:10px;background:#25324a;border:1px solid #40506b;display:grid;place-items:center;font-weight:800}
+    .track-cell.player{background:#a73c47;border-color:#ff8e8e}.track-cell.cpu{background:#3962ad;border-color:#8dbaff}
+    .chess-board{display:grid;grid-template-columns:repeat(8,minmax(30px,62px));width:min(100%,496px);border:4px solid #29364a;border-radius:8px;overflow:hidden}
+    .square{aspect-ratio:1;border:0;padding:0;font-size:clamp(19px,4vw,36px);display:grid;place-items:center}
+    .square.light{background:#e2d3b4;color:#18202e}.square.dark{background:#536c7e;color:#101820}
+    .square.selected{box-shadow:inset 0 0 0 4px var(--gold)}.square.legal{box-shadow:inset 0 0 0 4px #42d392}
+    .hand{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;min-height:90px;align-items:center}
+    .playing-card.large{width:64px;height:90px;font-size:26px}
+    .instructions{font-size:13px;text-align:center;color:var(--muted);max-width:720px;margin:0 auto}
+    @media(max-width:560px){header{align-items:flex-start;flex-direction:column}.stats{justify-content:flex-start}.app{gap:10px}.panel{padding:12px}.card-row{justify-content:flex-start}.cards-layout{min-width:0;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.cards-layout .pile{min-width:0;min-height:0!important}.cards-layout .playing-card{min-width:0;width:100%;height:48px;font-size:clamp(10px,3vw,12px);padding:1px}.cards-layout .playing-card:not(:last-child){margin-bottom:-26px!important}.solitaire-scroll{width:100%;overflow-x:auto}}
+    @media(max-height:640px){.app{padding:8px;gap:8px}header{padding:8px 10px}main{min-height:0;gap:8px}.panel{padding:8px}.board{min-height:0}canvas{height:min(42vh,230px);min-height:180px}.chess-board{grid-template-columns:repeat(8,minmax(0,1fr));width:min(100%,360px)}.square{font-size:clamp(14px,4vw,24px)}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div><div class="eyebrow">EarnGames · Game internal</div><h1 id="title">Mini Game</h1></div>
+      <div class="stats"><div class="stat">Skor <strong id="score">0</strong></div><div class="stat" id="timer-stat">Waktu <strong id="timer">--</strong></div><div class="stat" id="extra-stat">Level <strong id="extra">1</strong></div></div>
+    </header>
+    <main><section id="game" class="panel"></section><p class="instructions" id="instructions"></p></main>
+  </div>
+  <div class="result" id="result" hidden><div class="result-card"><h2 id="result-title">Selesai!</h2><p id="result-detail"></p><div class="actions"><button class="btn primary" id="again">Main Lagi</button><button class="btn" id="done">Kembali</button></div></div></div>
+<script>
+(() => {
+  const modes = {
+    'target-shooter': ['Tembak Sasaran', 'Bidik dan klik sasaran yang bergerak. Setiap sasaran bernilai 50 poin.'],
+    pinball: ['Bola Pinball', 'Jaga bola tetap di meja: klik bumper untuk poin bonus, tahan kedua tombol flipper atau gunakan tombol panah kiri dan kanan.'],
+    'tower-stack': ['Tower Stack', 'Klik atau tekan Spasi saat balok tepat di atas menara. Susun setinggi mungkin.'],
+    'sliding-puzzle': ['Puzzle Mania', 'Geser ubin ke ruang kosong sampai angka tersusun dari 1 sampai 8.'],
+    blackjack: ['Kartu Cepat', 'Mainkan lima ronde Blackjack. Pilih Ambil Kartu atau Berhenti, jangan melewati 21.'],
+    ludo: ['Ludo Sprint', 'Balapan melawan komputer. Lempar dadu; perlu angka 6 untuk keluar dari rumah.'],
+    chess: ['Catur Kilat', 'Kamu bermain putih melawan komputer. Klik bidak lalu kotak tujuan; hindari skakmat.'],
+    solitaire: ['Solitaire Cepat', 'Susun tiap jenis kartu dari As sampai Raja. Klik tumpukan untuk menarik kartu.']
+  }
+  const mode = new URLSearchParams(location.search).get('mode') || 'target-shooter'
+  const [name, help] = modes[mode] || modes['target-shooter']
+  const game = document.querySelector('#game')
+  const scoreEl = document.querySelector('#score')
+  const timerEl = document.querySelector('#timer')
+  const extraEl = document.querySelector('#extra')
+  const extraStat = document.querySelector('#extra-stat')
+  const timerStat = document.querySelector('#timer-stat')
+  const instructions = document.querySelector('#instructions')
+  let score = 0, interval = 0, raf = 0, ended = false, startedAt = Date.now()
+  let runController = new AbortController()
+  const pendingTimeouts = new Set()
+  const later = (callback, delay) => {
+    const id = setTimeout(() => { pendingTimeouts.delete(id); callback() }, delay)
+    pendingTimeouts.add(id)
+  }
+  const clearLater = () => { pendingTimeouts.forEach(clearTimeout); pendingTimeouts.clear() }
+  document.title = `${name} · EarnGames`
+  document.querySelector('#title').textContent = name
+  instructions.textContent = help
+  const setScore = (value) => { score = Math.max(0, Math.floor(value)); scoreEl.textContent = score }
+  const startTimer = (seconds) => {
+    let remaining = seconds
+    timerEl.textContent = remaining
+    interval = setInterval(() => {
+      remaining--
+      timerEl.textContent = remaining
+      if (remaining <= 0) finish('Waktu habis')
+    }, 1000)
+  }
+  function finish(reason) {
+    if (ended) return
+    ended = true
+    clearInterval(interval)
+    cancelAnimationFrame(raf)
+    clearLater()
+    const finalScore = Math.max(0, Math.floor(score))
+    document.querySelector('#result-title').textContent = reason || 'Permainan selesai!'
+    document.querySelector('#result-detail').textContent = `Skor akhir: ${finalScore}. Hasil dikirim ke EarnGames.`
+    document.querySelector('#result').hidden = false
+    try {
+      if (window.parent !== window) window.parent.postMessage({ type: 'EARNGAMES_GAME_RESULT', game: mode, score: finalScore, timeSec: Math.floor((Date.now()-startedAt)/1000) }, '*')
+    } catch (error) {
+      console.error('Gagal mengirim hasil game:', error)
+    }
+  }
+  function reset() {
+    ended = false
+    clearInterval(interval)
+    cancelAnimationFrame(raf)
+    clearLater()
+    runController.abort()
+    runController = new AbortController()
+    startedAt = Date.now()
+    document.querySelector('#result').hidden = true
+    setScore(0)
+    timerEl.textContent = '--'
+    extraEl.textContent = '1'
+    game.innerHTML = ''
+    launch()
+  }
+  document.querySelector('#again').addEventListener('click', reset)
+  document.querySelector('#done').addEventListener('click', () => {
+    if (window.parent !== window) window.parent.postMessage({ type: 'EARNGAMES_MINI_GAME_CLOSE' }, '*')
+  })
+
+  function launch() {
+    if (mode === 'target-shooter') targetShooter()
+    else if (mode === 'pinball') pinball()
+    else if (mode === 'tower-stack') towerStack()
+    else if (mode === 'sliding-puzzle') slidingPuzzle()
+    else if (mode === 'blackjack') blackjack()
+    else if (mode === 'ludo') ludo()
+    else if (mode === 'chess') chess()
+    else if (mode === 'solitaire') solitaire()
+    else targetShooter()
+  }
+
+  function targetShooter() {
+    game.innerHTML = '<div class="target-board"><canvas id="board" aria-label="Lapangan tembak"></canvas></div><div class="actions"><button class="btn primary" id="start">Mulai Menembak</button></div>'
+    const canvas = game.querySelector('canvas'), ctx = canvas.getContext('2d')
+    let width = 0, height = 0, hits = 0, target = { x: 0, y: 0, r: 28, vx: 2, vy: 1.5 }, active = false, last = 0
+    function resize() {
+      const rect = canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2)
+      width = rect.width; height = rect.height; canvas.width = width * dpr; canvas.height = height * dpr; ctx.setTransform(dpr,0,0,dpr,0,0)
+      target.x = Math.min(target.x || width / 2, width - 40); target.y = Math.min(target.y || height / 2, height - 40)
+      draw()
+    }
+    function draw() {
+      ctx.clearRect(0,0,width,height)
+      ctx.fillStyle = '#111c2d'; ctx.fillRect(0,0,width,height)
+      for (let i=0;i<12;i++) { ctx.strokeStyle = '#26354c'; ctx.beginPath(); ctx.moveTo(i*width/11,0); ctx.lineTo(i*width/11,height); ctx.stroke() }
+      if (!active) { ctx.fillStyle = '#e6edf7'; ctx.font = 'bold 20px system-ui'; ctx.textAlign = 'center'; ctx.fillText('Bidik sasaran dan kumpulkan poin',width/2,height/2); return }
+      ctx.fillStyle = '#ffcc48'; ctx.beginPath(); ctx.arc(target.x,target.y,target.r,0,Math.PI*2); ctx.fill()
+      ctx.fillStyle = '#ff644e'; ctx.beginPath(); ctx.arc(target.x,target.y,target.r*.65,0,Math.PI*2); ctx.fill()
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(target.x,target.y,target.r*.25,0,Math.PI*2); ctx.fill()
+      ctx.fillStyle='#dbe6f5'; ctx.font='bold 15px system-ui';ctx.textAlign='left';ctx.fillText(`Sasaran ${hits}/10`,14,24)
+    }
+    function loop(now) {
+      if (!active || ended) return
+      const dt = Math.min((now-last)/16,2); last=now
+      target.x += target.vx*dt; target.y += target.vy*dt
+      if (target.x < target.r || target.x > width-target.r) target.vx *= -1
+      if (target.y < target.r || target.y > height-target.r) target.vy *= -1
+      draw(); raf=requestAnimationFrame(loop)
+    }
+    canvas.addEventListener('pointerdown', (event) => {
+      if (!active || ended) return
+      const rect=canvas.getBoundingClientRect(), x=event.clientX-rect.left, y=event.clientY-rect.top
+      if (Math.hypot(x-target.x,y-target.y) <= target.r) {
+        hits++; setScore(score+50); target.r=Math.max(16,target.r-1)
+        target.x=target.r+Math.random()*(width-target.r*2);target.y=target.r+Math.random()*(height-target.r*2)
+        target.vx=(Math.random()<.5?-1:1)*(2+hits*.2);target.vy=(Math.random()<.5?-1:1)*(1.5+hits*.15)
+        if(hits===10) finish('Semua sasaran kena!')
+      }
+    })
+    window.addEventListener('resize',resize,{signal:runController.signal});resize()
+    game.querySelector('#start').addEventListener('click',()=>{active=true;game.querySelector('#start').disabled=true;startTimer(45);last=performance.now();raf=requestAnimationFrame(loop)})
+  }
+
+  function towerStack() {
+    game.innerHTML='<canvas id="board" aria-label="Menara balok"></canvas><div class="actions"><button class="btn primary" id="drop">Jatuhkan Balok</button></div>'
+    const canvas=game.querySelector('canvas'),ctx=canvas.getContext('2d');let w=0,h=0,x=0,dir=1,placed=0,active=true,moving=false,last=0,blockW=100
+    function size(){const r=canvas.getBoundingClientRect(),d=devicePixelRatio||1;w=r.width;h=r.height;canvas.width=w*d;canvas.height=h*d;ctx.setTransform(d,0,0,d,0,0);blockW=Math.min(120,w*.28);if(!placed)x=(w-blockW)/2;draw()}
+    function draw(){ctx.clearRect(0,0,w,h);ctx.fillStyle='#101725';ctx.fillRect(0,0,w,h);ctx.fillStyle='#ffd23f';ctx.fillRect(0,h-25,w,25);for(let i=0;i<placed;i++){ctx.fillStyle=`hsl(${40+i*13} 85% 55%)`;ctx.fillRect((w-blockW)/2,h-25-(i+1)*16,blockW,14)}if(active){ctx.fillStyle='#42d392';ctx.fillRect(x,h-25-(placed+1)*16,blockW,14)}ctx.fillStyle='#f4f5f7';ctx.font='bold 18px system-ui';ctx.fillText(`Balok ${placed}/30`,16,28)}
+    function loop(now){if(!active||ended)return;const dt=Math.min((now-last)/16,2);last=now;if(moving){x+=dir*(2+placed*.08)*dt;if(x<0||x>w-blockW)dir*=-1}draw();raf=requestAnimationFrame(loop)}
+    function drop(){if(!active||ended)return;const center=(w-blockW)/2,offset=Math.abs(x-center);if(offset>blockW*.82){active=false;finish('Menaranya roboh!');return}placed++;const earned=15+(offset<8?15:0);setScore(score+earned);blockW=Math.max(34,blockW-offset);x=(w-blockW)/2;moving=true;if(placed>=30)finish('Menara mencapai puncak!')}
+    game.querySelector('#drop').addEventListener('click',drop);canvas.addEventListener('pointerdown',drop);window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();drop()}},{signal:runController.signal});window.addEventListener('resize',size,{signal:runController.signal});size();raf=requestAnimationFrame(loop)
+  }
+
+  function pinball() {
+    game.innerHTML='<canvas id="board" aria-label="Meja pinball"></canvas><div class="actions"><button class="btn" id="left-flipper">◀ Flipper kiri</button><button class="btn" id="right-flipper">Flipper kanan ▶</button><button class="btn primary" id="launch">Luncurkan bola</button></div><p class="help" id="balls">Bola tersisa: 3</p>'
+    const canvas=game.querySelector('canvas'),ctx=canvas.getContext('2d');let w=0,h=0,ball=null,balls=3,left=false,right=false,last=0,playing=false
+    let bumpers=[]
+    function size(){const r=canvas.getBoundingClientRect(),d=devicePixelRatio||1;w=r.width;h=r.height;canvas.width=w*d;canvas.height=h*d;ctx.setTransform(d,0,0,d,0,0);bumpers=[{x:w*.3,y:h*.34,r:Math.min(25,w*.045)},{x:w*.7,y:h*.34,r:Math.min(25,w*.045)},{x:w*.5,y:h*.52,r:Math.min(30,w*.052)},{x:w*.25,y:h*.68,r:Math.min(19,w*.038)},{x:w*.75,y:h*.68,r:Math.min(19,w*.038)}];draw()}
+    function draw(){ctx.clearRect(0,0,w,h);ctx.fillStyle='#101725';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#65758d';ctx.lineWidth=5;ctx.strokeRect(18,15,w-36,h-30);bumpers.forEach(p=>{ctx.fillStyle=p.flashUntil>performance.now()?'#fff':'#ffd23f';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff2b3';ctx.beginPath();ctx.arc(p.x-p.r*.25,p.y-p.r*.25,p.r*.25,0,Math.PI*2);ctx.fill()});ctx.strokeStyle='#42d392';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(w*.32,h*.83);ctx.lineTo(left?w*.46:w*.42,h*.77);ctx.moveTo(w*.68,h*.83);ctx.lineTo(right?w*.54:w*.58,h*.77);ctx.stroke();if(ball){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ball.x,ball.y,9,0,Math.PI*2);ctx.fill()}ctx.fillStyle='#dbe6f5';ctx.font='bold 15px system-ui';ctx.fillText(`Skor ${score}`,30,38)}
+    function launch(){if(ended)return;if(!ball){ball={x:w*.5,y:h*.82,vx:(Math.random()-.5)*2,vy:-8};playing=true;last=performance.now();raf=requestAnimationFrame(loop)}}
+    function loop(now){if(!playing||ended)return;const dt=Math.min((now-last)/16,1.8);last=now;if(!ball){playing=false;draw();return}ball.vy+=.18*dt;ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;if(ball.x<28){ball.x=28;ball.vx=Math.abs(ball.vx)*.85}if(ball.x>w-28){ball.x=w-28;ball.vx=-Math.abs(ball.vx)*.85}if(ball.y<28){ball.y=28;ball.vy=Math.abs(ball.vy)*.8}for(const p of bumpers){const dx=ball.x-p.x,dy=ball.y-p.y,d=Math.hypot(dx,dy);if(d<p.r+9){const nx=dx/(d||1),ny=dy/(d||1);ball.x=p.x+nx*(p.r+10);ball.y=p.y+ny*(p.r+10);ball.vx=nx*6;ball.vy=ny*6;setScore(score+25)}}const inFlipperZone=ball.y>h*.72;if(inFlipperZone&&ball.vy>0&&((left&&ball.x<w*.5)||(right&&ball.x>=w*.5))){ball.y=h*.71;ball.vy=-Math.max(6,Math.abs(ball.vy)+2);ball.vx+=(ball.x<w*.5?2:-2);setScore(score+10)}if(ball.y>h-20){balls--;game.querySelector('#balls').textContent=`Bola tersisa: ${balls}`;ball=null;if(balls<=0){playing=false;draw();finish('Semua bola habis!');return}later(launch,650)}draw();raf=requestAnimationFrame(loop)}
+    const bind=(id,side)=>{const button=game.querySelector(id);button.addEventListener('pointerdown',e=>{e.preventDefault();if(side==='left')left=true;else right=true});['pointerup','pointercancel','pointerleave'].forEach(type=>button.addEventListener(type,()=>{if(side==='left')left=false;else right=false}))}
+    bind('#left-flipper','left');bind('#right-flipper','right');game.querySelector('#launch').addEventListener('click',launch);canvas.addEventListener('pointerdown',event=>{const rect=canvas.getBoundingClientRect(),x=event.clientX-rect.left,y=event.clientY-rect.top,p=bumpers.find(target=>Math.hypot(x-target.x,y-target.y)<target.r*1.35);if(p){p.flashUntil=performance.now()+180;setScore(score+25);draw()}else launch()})
+    window.addEventListener('keydown',e=>{if(e.code==='ArrowLeft')left=true;if(e.code==='ArrowRight')right=true},{signal:runController.signal});window.addEventListener('keyup',e=>{if(e.code==='ArrowLeft')left=false;if(e.code==='ArrowRight')right=false},{signal:runController.signal})
+    window.addEventListener('resize',size,{signal:runController.signal});size();startTimer(60)
+  }
+
+  function slidingPuzzle() {
+    game.innerHTML='<div class="tiles" id="tiles" aria-label="Puzzle angka"></div><p class="help" id="moves">Langkah: 0</p><div class="actions"><button class="btn" id="shuffle">Acak Ulang</button></div>'
+    const board=game.querySelector('#tiles'),movesEl=game.querySelector('#moves');let cells=[],moves=0
+    function draw(){board.innerHTML='';cells.forEach((n,i)=>{const b=document.createElement('button');b.className='tile'+(n===0?' empty':'');b.textContent=n||'';b.setAttribute('aria-label',n?`Ubin ${n}`:'Ruang kosong');b.disabled=n===0;b.addEventListener('click',()=>move(i));board.appendChild(b)});movesEl.textContent=`Langkah: ${moves}`}
+    function shuffle(){cells=[1,2,3,4,5,6,7,8,0];let blank=8,prev=-1;for(let i=0;i<100;i++){const options=[blank-3,blank+3,...(blank%3?[blank-1]:[]),...(blank%3<2?[blank+1]:[])].filter(n=>n>=0&&n<9&&Math.abs(n%3-blank%3)+Math.abs(Math.floor(n/3)-Math.floor(blank/3))===1&&n!==prev);const next=options[Math.floor(Math.random()*options.length)];[cells[blank],cells[next]]=[cells[next],cells[blank]];prev=blank;blank=next}moves=0;setScore(0);draw()}
+    function move(i){const blank=cells.indexOf(0);if(Math.abs(i%3-blank%3)+Math.abs(Math.floor(i/3)-Math.floor(blank/3))!==1)return;[cells[i],cells[blank]]=[cells[blank],cells[i]];moves++;movesEl.textContent=`Langkah: ${moves}`;draw();if(cells.join(',')==='1,2,3,4,5,6,7,8,0'){setScore(Math.max(100,700-moves*4));finish('Puzzle tersusun!')} }
+    game.querySelector('#shuffle').addEventListener('click',shuffle);shuffle()
+  }
+
+  function blackjack() {
+    game.innerHTML='<div class="actions"><div class="stat">Ronde <strong id="round">1/5</strong></div><div class="stat">Menang <strong id="wins">0</strong></div></div><div class="hand" id="player"></div><p class="help" id="player-value">Nilai kamu: 0</p><p class="help" id="dealer-value">Dealer: ?</p><div class="hand" id="dealer"></div><div class="actions"><button class="btn primary" id="hit">Ambil Kartu</button><button class="btn" id="stand">Berhenti</button></div>'
+    const suits=['♠','♥','♦','♣'],rankNames=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];let deck=[],player=[],dealer=[],round=1,wins=0,locked=false
+    const value=(hand)=>{let total=0,aces=0;hand.forEach(c=>{if(c.rank==='A'){total+=11;aces++}else total+=['J','Q','K'].includes(c.rank)?10:Number(c.rank)});while(total>21&&aces-- >0)total-=10;return total}
+    function card(){if(!deck.length)deck=Array.from({length:52},(_,i)=>({rank:rankNames[i%13],suit:suits[Math.floor(i/13)]})).sort(()=>Math.random()-.5);return deck.pop()}
+    function draw(showAll=false){for(const [id,hand] of [['player',player],['dealer',dealer]]){const node=game.querySelector(`#${id}`);node.innerHTML='';hand.forEach((c,i)=>{const el=document.createElement('div');el.className='playing-card large'+('♥♦'.includes(c.suit)?' red':'')+(id==='dealer'&&!showAll&&i===1?' back':'');el.textContent=id==='dealer'&&!showAll&&i===1?'':c.rank+c.suit;node.appendChild(el)})}game.querySelector('#player-value').textContent=`Nilai kamu: ${value(player)}`;game.querySelector('#dealer-value').textContent=`Dealer: ${showAll?value(dealer):dealer[0].rank+dealer[0].suit+' + ?'}`;game.querySelector('#round').textContent=`${round}/5`;game.querySelector('#wins').textContent=wins}
+    function next(){player=[card(),card()];dealer=[card(),card()];locked=false;draw();if(value(player)===21)settle()}
+    function settle(){if(locked||ended)return;locked=true;while(value(dealer)<17)dealer.push(card());const pv=value(player),dv=value(dealer);let earned=0;if(pv<=21&&(dv>21||pv>dv)){wins++;earned=pv===21?200:150}else if(pv===dv)earned=60;setScore(score+earned);draw(true);game.querySelector('#hit').disabled=true;game.querySelector('#stand').disabled=true;game.querySelector('#dealer-value').textContent=`Dealer: ${dv} · ${earned?`+${earned} poin`:'ronde kalah'}`;later(()=>{if(round>=5){finish(`Ronde selesai · ${wins} kemenangan`);return}round++;game.querySelector('#hit').disabled=false;game.querySelector('#stand').disabled=false;next()},1100)}
+    game.querySelector('#hit').addEventListener('click',()=>{if(locked)return;player.push(card());draw();if(value(player)>=21)settle()});game.querySelector('#stand').addEventListener('click',settle);next()
+  }
+
+  function ludo() {
+    game.innerHTML='<div class="actions"><div class="stat">Kamu <strong id="player-pos">Rumah</strong></div><div class="stat">Komputer <strong id="cpu-pos">Rumah</strong></div><div class="stat">Dadu <strong id="die">-</strong></div></div><div class="ludo-track" id="track"></div><div class="actions"><button class="btn primary" id="roll">Lempar Dadu</button></div><p class="help" id="turn">Giliran kamu</p>'
+    let player=-1,cpu=-1,turn='player',locked=false,rounds=0
+    function board(){const track=game.querySelector('#track');track.innerHTML='';for(let i=0;i<32;i++){const c=document.createElement('div');c.className='track-cell';c.textContent=i+1;if(i===player)c.classList.add('player');if(i===cpu)c.classList.add('cpu');if(i===player&&i===cpu)c.textContent='⚔';track.appendChild(c)}game.querySelector('#player-pos').textContent=player<0?'Rumah':player>=32?'Finish':`${player+1}/32`;game.querySelector('#cpu-pos').textContent=cpu<0?'Rumah':cpu>=32?'Finish':`${cpu+1}/32`}
+    function roll(){if(locked||ended)return;locked=true;const n=1+Math.floor(Math.random()*6);game.querySelector('#die').textContent=n;rounds++;if(turn==='player'){if(player<0&&n===6)player=0;else if(player>=0)player=Math.min(32,player+n);setScore(score+(player>=0?n*15:0));board();if(player>=32){setScore(score+250);finish('Kamu memenangkan balapan!');return}game.querySelector('#turn').textContent=`Kamu mendapat ${n}. Giliran komputer…`;later(()=>{turn='cpu';computer()},700)}else{if(cpu<0&&n===6)cpu=0;else if(cpu>=0)cpu=Math.min(32,cpu+n);if(cpu>=32){board();finish('Komputer menang kali ini!');return}turn='player';board();game.querySelector('#turn').textContent='Giliran kamu';locked=false}}
+    function computer(){if(ended)return;const n=1+Math.floor(Math.random()*6);game.querySelector('#die').textContent=n;if(cpu<0&&n===6)cpu=0;else if(cpu>=0)cpu=Math.min(32,cpu+n);board();if(cpu>=32){finish('Komputer menang kali ini!');return}turn='player';locked=false;game.querySelector('#turn').textContent='Giliran kamu'}
+    game.querySelector('#roll').addEventListener('click',roll);board()
+  }
+
+  function chess() {
+    game.innerHTML='<div class="actions"><div class="stat">Putih <strong>kamu</strong></div><div class="stat">Hitam <strong>komputer</strong></div><div class="stat">Giliran <strong id="chess-turn">Putih</strong></div></div><div class="chess-board" id="chess-board"></div><p class="help" id="chess-message">Pilih bidak putih.</p>'
+    const icons={K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'}
+    let b=['rnbqkbnr','pppppppp','........','........','........','........','PPPPPPPP','RNBQKBNR'].map(r=>r.split('')),selected=null,legal=[],turn='w',moves=0
+    const side=(p)=>p==='.'?null:(p===p.toUpperCase()?'w':'b')
+    const inside=(r,c)=>r>=0&&r<8&&c>=0&&c<8
+    function attacked(board,r,c,by){for(let y=0;y<8;y++)for(let x=0;x<8;x++){const p=board[y][x];if(side(p)!==by)continue;const dr=r-y,dc=c-x,type=p.toUpperCase();if(type==='P'&&dr===(by==='w'?-1:1)&&Math.abs(dc)===1)return true;if(type==='N'&&Math.abs(dr)*Math.abs(dc)===2)return true;if(type==='K'&&Math.max(Math.abs(dr),Math.abs(dc))===1)return true;if((type==='R'||type==='Q')&&(dr===0||dc===0)||(type==='B'||type==='Q')&&Math.abs(dr)===Math.abs(dc)){const sr=Math.sign(dr),sc=Math.sign(dc);let yy=y+sr,xx=x+sc,clear=true;while(yy!==r||xx!==c){if(board[yy][xx]!=='.'){clear=false;break}yy+=sr;xx+=sc}if(clear)return true}}return false}
+    function kingSafe(board,color){let kr=-1,kc=-1;for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(board[r][c]===(color==='w'?'K':'k')){kr=r;kc=c}return kr>=0&&!attacked(board,kr,kc,color==='w'?'b':'w')}
+    function pseudo(board,r,c){const p=board[r][c],color=side(p),type=p.toUpperCase(),out=[];const add=(y,x)=>{if(inside(y,x)&&side(board[y][x])!==color&&board[y][x].toUpperCase()!=='K')out.push([y,x])};if(type==='P'){const dir=color==='w'?-1:1,start=color==='w'?6:1;if(inside(r+dir,c)&&board[r+dir][c]==='.') {add(r+dir,c);if(r===start&&board[r+2*dir][c]==='.')add(r+2*dir,c)}for(const dx of[-1,1])if(inside(r+dir,c+dx)&&side(board[r+dir][c+dx])&&side(board[r+dir][c+dx])!==color)add(r+dir,c+dx);return out}if(type==='N'){for(const [dy,dx] of [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]])add(r+dy,c+dx);return out}if(type==='K'){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(dy||dx)add(r+dy,c+dx);return out}const dirs=[];if(type==='R'||type==='Q')dirs.push([1,0],[-1,0],[0,1],[0,-1]);if(type==='B'||type==='Q')dirs.push([1,1],[1,-1],[-1,1],[-1,-1]);for(const[dy,dx]of dirs){let y=r+dy,x=c+dx;while(inside(y,x)){if(side(board[y][x])===color)break;if(board[y][x].toUpperCase()==='K')break;out.push([y,x]);if(board[y][x]!=='.')break;y+=dy;x+=dx}}return out}
+    function movesFor(board,r,c){const color=side(board[r][c]);return pseudo(board,r,c).filter(([y,x])=>{const copy=board.map(row=>row.slice());copy[y][x]=copy[r][c];copy[r][c]='.';if(copy[y][x]==='P'&&y===0)copy[y][x]='Q';if(copy[y][x]==='p'&&y===7)copy[y][x]='q';return kingSafe(copy,color)})}
+    function allMoves(color){const out=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(side(b[r][c])===color)for(const[y,x]of movesFor(b,r,c))out.push({from:[r,c],to:[y,x],capture:b[y][x]!=='.'});return out}
+    function render(){const board=game.querySelector('#chess-board');board.innerHTML='';for(let r=0;r<8;r++)for(let c=0;c<8;c++){const sq=document.createElement('button');sq.className=`square ${(r+c)%2?'dark':'light'}`;if(selected&&selected[0]===r&&selected[1]===c)sq.classList.add('selected');if(legal.some(([y,x])=>y===r&&x===c))sq.classList.add('legal');sq.textContent=icons[b[r][c]]||'';sq.setAttribute('aria-label',`${String.fromCharCode(97+c)}${8-r} ${b[r][c]==='.'?'kosong':b[r][c]}`);sq.addEventListener('click',()=>clickSquare(r,c));board.appendChild(sq)}game.querySelector('#chess-turn').textContent=turn==='w'?'Putih':'Komputer'}
+    function apply(m){const [r,c]=m.from,[y,x]=m.to,capture=b[y][x]!=='.';b[y][x]=b[r][c];b[r][c]='.';if(b[y][x]==='P'&&y===0)b[y][x]='Q';if(b[y][x]==='p'&&y===7)b[y][x]='q';moves++;if(m.capture||capture)setScore(score+30);else setScore(score+20);turn=turn==='w'?'b':'w';const check=!kingSafe(b,turn);render();const options=allMoves(turn);if(!options.length){if(check&&turn==='b'){setScore(score+300);finish('Skakmat! Kamu menang!')}else finish(check?'Skakmat — komputer menang':'Remis');return}if(check)game.querySelector('#chess-message').textContent='Skak! Lindungi rajamu.';else game.querySelector('#chess-message').textContent=`Langkah ${moves}. ${turn==='w'?'Giliran kamu.':'Komputer berpikir…'}`}
+    function clickSquare(r,c){if(ended||turn!=='w')return;if(selected&&legal.some(([y,x])=>y===r&&x===c)){apply({from:selected,to:[r,c],capture:b[r][c]!=='.'});selected=null;legal=[];render();if(!ended){later(()=>{if(turn!=='b'||ended)return;const list=allMoves('b');if(!list.length){finish('Komputer kehabisan langkah.');return}list.sort((a,b)=>Number(b.capture)-Number(a.capture));const m=list[Math.floor(Math.random()*Math.min(3,list.length))];apply(m)},450)}return}if(side(b[r][c])==='w'){selected=[r,c];legal=movesFor(b,r,c)}else{selected=null;legal=[]}render()}
+    game.querySelector('#chess-message').textContent='Pilih bidak putih untuk melihat langkah legal.';render();startTimer(120)
+  }
+
+  function solitaire() {
+    game.innerHTML='<div class="solitaire-top"><div class="actions"><button class="btn" id="stock">Ambil Kartu</button><div class="pile" id="waste">Buangan</div></div><div class="actions" id="foundations"></div></div><div class="solitaire-scroll"><div class="cards-layout" id="columns"></div></div><p class="help" id="solitaire-status">Pilih kartu terbuka lalu pilih tujuan yang sesuai.</p>'
+    const suits=['♠','♥','♦','♣'],red=(s)=>s==='♥'||s==='♦';let deck=[],cols=[],found=[[],[],[],[]],waste=[],selected=null,moves=0
+    function newCard(suit,rank){return{suit,rank,face:false}}
+    function rankValue(c){return c.rank}
+    function drawCard(c,click){const el=document.createElement('button');el.className='playing-card'+(c.face?'':' back')+(c.face&&red(c.suit)?' red':'')+(selected===c?' selected':'');el.textContent=c.face?`${c.rank===1?'A':c.rank===11?'J':c.rank===12?'Q':c.rank===13?'K':c.rank}${c.suit}`:'';el.addEventListener('click',click);return el}
+    function init(){deck=[];suits.forEach(s=>{for(let r=1;r<=13;r++)deck.push(newCard(s,r))});deck.sort(()=>Math.random()-.5);cols=Array.from({length:7},(_,i)=>Array.from({length:i+1},(_,j)=>{const c=deck.pop();c.face=j===i;return c}));found=[[],[],[],[]];waste=[];selected=null;moves=0;setScore(0);render()}
+    function render(){const foundations=game.querySelector('#foundations');foundations.innerHTML='';found.forEach((pile,i)=>{const p=document.createElement('button');p.className='pile';p.textContent=pile.length?`${pile[pile.length-1].rank===1?'A':pile[pile.length-1].rank}${pile[pile.length-1].suit}`:`As ${suits[i]}`;p.addEventListener('click',()=>moveToFoundation(i));foundations.appendChild(p)});const wasteNode=game.querySelector('#waste');wasteNode.innerHTML='';if(waste.length)wasteNode.appendChild(drawCard(waste[waste.length-1],()=>selectWaste()));else wasteNode.textContent='Buangan';const columns=game.querySelector('#columns');columns.innerHTML='';columns.style.gridTemplateColumns=`repeat(7,minmax(0,1fr))`;cols.forEach((col,i)=>{const pile=document.createElement('div');pile.className='pile';pile.style.minHeight=`${86+Math.max(0,col.length-1)*22}px`;pile.addEventListener('click',()=>{if(selected){moveToColumn(i);return}selectColumn(i,col.length-1)});col.forEach((c,j)=>{const card=drawCard(c,(e)=>{e.stopPropagation();if(selected)moveToColumn(i);else selectColumn(i,j)});if(j<col.length-1)card.style.marginBottom='-15px';pile.appendChild(card)});if(!col.length){pile.textContent='';pile.addEventListener('click',()=>selected&&moveToColumn(i))}columns.appendChild(pile)})}
+    function selectWaste(){if(!waste.length)return;selected=waste[waste.length-1];render()}
+    function selectColumn(i,j){const c=cols[i][j];if(!c||!c.face)return;selected={card:c,column:i,index:j};render()}
+    function flipTop(i){const col=cols[i];if(col.length&&!col[col.length-1].face){col[col.length-1].face=true;setScore(score+5)}}
+    function canPlace(card,target){if(!target)return card.rank===13;return target.face&&target.rank===card.rank+1&&red(target.suit)!==red(card.suit)}
+    function moveToColumn(i){if(!selected)return;const card=selected.card||selected,target=cols[i][cols[i].length-1];if(!canPlace(card,target)){selected=null;render();return}if(selected.column!==undefined){const moving=cols[selected.column].splice(selected.index);cols[i].push(...moving);flipTop(selected.column)}else{waste.pop();cols[i].push(card)}selected=null;moves++;setScore(score+10);render()}
+    function moveToFoundation(i){if(!selected)return;const card=selected.card||selected,target=found[i][found[i].length-1];if(card.suit!==suits[i]||card.rank!==(target?target.rank+1:1)){selected=null;render();return}if(selected.column!==undefined){if(selected.index!==cols[selected.column].length-1){selected=null;render();return}cols[selected.column].pop();flipTop(selected.column)}else waste.pop();found[i].push(card);selected=null;moves++;setScore(score+25);render();if(found.every(p=>p.length===13)){setScore(score+300);finish('Semua kartu tersusun!')}}
+    game.querySelector('#stock').addEventListener('click',()=>{selected=null;if(!deck.length){if(!waste.length)return;deck=waste.reverse().map(c=>({...c,face:false}));waste=[]}else{const c=deck.pop();c.face=true;waste.push(c);setScore(score+2)}render()})
+    init()
+  }
+
+  launch()
+})()
+</script>
+</body>
+</html>

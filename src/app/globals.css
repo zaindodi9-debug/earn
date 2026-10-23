@@ -1,0 +1,344 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* ============================================================
+   EarnGames — Dark Gold Gaming Theme
+   Root palette is dark by default (no .dark wrapper required).
+   ============================================================ */
+:root {
+  --radius: 0.75rem;
+
+  /* App surfaces */
+  --background: #0B0F19;
+  --foreground: #FFFFFF;
+
+  /* Cards / popovers */
+  --card: #151b28;
+  --card-foreground: #FFFFFF;
+  --popover: #151b28;
+  --popover-foreground: #FFFFFF;
+
+  /* Primary = gold */
+  --primary: #FBBF24;
+  --primary-foreground: #0B0F19;
+
+  /* Secondary = darker chip surface */
+  --secondary: #1f2937;
+  --secondary-foreground: #FFFFFF;
+
+  /* Muted surfaces + text */
+  --muted: #1a1f2e;
+  --muted-foreground: #9CA3AF;
+
+  /* Accent = gold tinted chip */
+  --accent: rgba(255, 215, 0, 0.12);
+  --accent-foreground: #FBBF24;
+
+  --destructive: #EF4444;
+
+  /* Borders / inputs / rings */
+  --border: rgba(255, 255, 255, 0.08);
+  --input: #1f2937;
+  --ring: #FBBF24;
+
+  /* Chart palette (gold/amber/emerald/sky/violet) */
+  --chart-1: #FBBF24;
+  --chart-2: #FFA500;
+  --chart-3: #10B981;
+  --chart-4: #38BDF8;
+  --chart-5: #A78BFA;
+
+  --sidebar: #0f1419;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #FBBF24;
+  --sidebar-primary-foreground: #0B0F19;
+  --sidebar-accent: rgba(255, 215, 0, 0.12);
+  --sidebar-accent-foreground: #FBBF24;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-ring: #FBBF24;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background: linear-gradient(180deg, #0B0F19 0%, #0e1320 100%);
+    min-height: 100vh;
+  }
+  /* Dark scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0B0F19;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 215, 0, 0.25);
+    border-radius: 999px;
+    border: 2px solid #0B0F19;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 215, 0, 0.45);
+  }
+  * {
+    scrollbar-color: rgba(255, 215, 0, 0.3) #0B0F19;
+    scrollbar-width: thin;
+  }
+}
+
+/* ============================================================
+   EarnGames — custom utility classes
+   ============================================================ */
+
+/* Gold gradient — primary CTA / accents (was green) */
+.eg-gradient-bg {
+  background: linear-gradient(135deg, #FFE066 0%, #FFB800 100%);
+}
+
+/* Gold gradient text */
+.eg-gold-text {
+  background: linear-gradient(135deg, #FFE066 0%, #FFA500 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Dark blue gradient (hero, CTA panels) */
+.eg-hero-gradient {
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 60%, #0B0F19 100%);
+}
+
+/* Dark card surface */
+.eg-dark-card {
+  background: #151b28;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+/* Glassmorphism card */
+.eg-glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Gold glow on hover */
+.eg-glow {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+.eg-glow-strong {
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.55);
+}
+
+.eg-card-hover {
+  transition: all 0.3s ease;
+}
+.eg-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 18px rgba(255, 215, 0, 0.25);
+  border-color: rgba(255, 215, 0, 0.4);
+}
+
+.eg-animate-float {
+  animation: eg-float 3s ease-in-out infinite;
+}
+@keyframes eg-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.eg-pulse-glow {
+  animation: eg-pulse 2.4s ease-in-out infinite;
+}
+@keyframes eg-pulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(255, 215, 0, 0.45); }
+  50% { box-shadow: 0 0 36px rgba(255, 215, 0, 0.75); }
+}
+
+/* App card surface — legacy helper kept for compatibility, now dark */
+.eg-app-card {
+  background: #151b28;
+  backdrop-filter: blur(10px);
+}
+
+.eg-star-rating {
+  color: #FBBF24;
+}
+
+/* Feature icon background — gold */
+.eg-feature-icon {
+  background: linear-gradient(135deg, #FFE066, #FFA500);
+}
+
+.eg-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+}
+.eg-reveal.eg-reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================
+   Floating gold coin particles (hero decoration)
+   ============================================================ */
+.eg-coin-particle {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, #FFF6BF, #FFD700 45%, #C99500 100%);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.55), inset 0 0 6px rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  animation: eg-coin-rise 7s ease-in-out infinite;
+  opacity: 0.85;
+}
+@keyframes eg-coin-rise {
+  0% { transform: translateY(20px) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.85; }
+  50% { transform: translateY(-40px) translateX(10px) rotate(180deg); opacity: 1; }
+  90% { opacity: 0.85; }
+  100% { transform: translateY(-80px) translateX(-8px) rotate(360deg); opacity: 0; }
+}
+
+/* ============================================================
+   Bottom navigation bar (mobile-app-style)
+   ============================================================ */
+.eg-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(15, 20, 25, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
+}
+@media (min-width: 640px) {
+  .eg-bottom-nav {
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+    width: 100%;
+    max-width: 480px;
+    border-radius: 20px 20px 0 0;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 0;
+  }
+}
+.eg-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: 1 1 0;
+  padding: 8px 0 10px;
+  color: #6B7280;
+  font-size: 11px;
+  font-weight: 500;
+  transition: color 0.18s ease, transform 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.eg-bottom-nav-item:hover {
+  color: #FBBF24;
+}
+.eg-bottom-nav-item[data-active="true"] {
+  color: #FFD700;
+}
+.eg-bottom-nav-item[data-active="true"] .eg-bottom-nav-icon {
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.75));
+  transform: translateY(-1px);
+}
+.eg-bottom-nav-icon {
+  width: 24px;
+  height: 24px;
+  transition: filter 0.18s ease, transform 0.18s ease;
+}
+
+/* Hide horizontal scrollbar but keep scrolling */
+.eg-no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.eg-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Category chip — pill, default dark, active gold */
+.eg-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 16px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #1f2937;
+  color: #9CA3AF;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+.eg-chip:hover {
+  color: #FBBF24;
+  border-color: rgba(255, 215, 0, 0.3);
+}
+.eg-chip[data-active="true"] {
+  background: linear-gradient(135deg, #FFE066, #FFB800);
+  color: #0B0F19;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(255, 184, 0, 0.3);
+}

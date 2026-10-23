@@ -1,0 +1,102 @@
+// Prisma schema for NexusPlay — internal games platform
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  name         String?
+  passwordHash String
+  role         String          @default("USER") // USER | ADMIN
+  status       String          @default("ACTIVE") // ACTIVE | SUSPENDED
+  points       Int             @default(0)
+  avatarUrl    String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  progress     UserProgress[]
+  pointsLedger PointsLedger[]
+  sessions     Session[]
+}
+
+model Game {
+  id           String      @id @default(cuid())
+  title        String
+  slug         String      @unique
+  description  String?
+  category     String      @default("arcade") // arcade | puzzle | card | sports | strategy
+  thumbnailUrl String?
+  embedUrl     String? // game will be provided later; admin sets this when ready
+  status       String      @default("DRAFT") // DRAFT | ACTIVE | HIDDEN
+  sortOrder    Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  levels       GameLevel[]
+}
+
+model GameLevel {
+  id           String   @id @default(cuid())
+  gameId       String
+  levelNumber  Int
+  name         String
+  difficulty   String   @default("EASY") // EASY | MEDIUM | HARD | EXPERT
+  targetScore  Int      @default(100)
+  timeLimitSec Int      @default(60)
+  rewardPoints Int      @default(10)
+  status       String   @default("ACTIVE") // ACTIVE | LOCKED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  game         Game           @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  progress     UserProgress[]
+
+  @@unique([gameId, levelNumber])
+}
+
+model UserProgress {
+  id           String    @id @default(cuid())
+  userId       String
+  gameLevelId  String
+  highScore    Int       @default(0)
+  bestTimeSec  Int?
+  attempts     Int       @default(0)
+  completed    Boolean   @default(false)
+  lastPlayedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameLevel    GameLevel @relation(fields: [gameLevelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameLevelId])
+}
+
+model PointsLedger {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int // + credit, - debit
+  reason    String // GAME_REWARD | ADMIN_ADJUST | SIGNUP_BONUS
+  reference String? // gameLevelId or note
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
