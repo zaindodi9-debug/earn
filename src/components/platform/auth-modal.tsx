@@ -103,7 +103,7 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
             Masuk ke <span className="eg-gold-text">EarnGames</span>
           </DialogTitle>
           <DialogDescription className="text-gray-400">
-            Masuk untuk mulai bermain dan mengumpulkan poin, atau daftar akun baru.
+            Masuk untuk bermain dan melihat progres akun. Akun baru mendapat bonus pendaftaran 100 poin; hadiah dari skor permainan sementara dinonaktifkan.
           </DialogDescription>
         </DialogHeader>
 
